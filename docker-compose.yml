@@ -1,7 +1,6 @@
 version: '3'
 services:
   cennznet:
-    name: cennznet-validator-sidecar
     image: cennznet/cennznet:2.0.0-rc5
     volumes:
     - ./data/cennznet:/mnt/data
@@ -17,8 +16,7 @@ services:
       - "9933:9933"
       - "9944:9944"
   mongo:
-    name: mongodb-sidecar
-    image: mongo/mongo:5
+    image: mongo:5
     restart: always
     environment:
     - MONGO_INITDB_ROOT_USERNAME="${MONGO_INITDB_ROOT_USERNAME}"

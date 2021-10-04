@@ -8,6 +8,8 @@
   "license": "Apache",
   "dependencies": {
     "fastify": "^3.22.0",
+    "fastify-mongodb": "^4.1.0",
+    "fastify-plugin": "^3.0.0",
     "mongoose": "^6.0.9"
   }
 }
