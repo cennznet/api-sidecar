@@ -8,12 +8,17 @@
   "license": "Apache",
   "scripts": {
     "api": "node src/api/index.js",
-    "seed": "node src/seedFake.js"
+    "seed": "node src/seedFake.js",
+    "scan:current": "node src/scanner.js"
   },
   "dependencies": {
+    "@cennznet/api": "^1.5.0-alpha.3",
+    "dotenv": "^8.2.0",
     "fastify": "^3.22.0",
     "fastify-mongodb": "^4.1.0",
     "fastify-plugin": "^3.0.0",
-    "mongoose": "^6.0.9"
+    "moment": "^2.29.1",
+    "mongoose": "^6.0.9",
+    "winston": "^3.2.1"
   }
 }
