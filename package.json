@@ -1,0 +1,13 @@
+{
+  "name": "api-sidecar",
+  "version": "1.0.0",
+  "description": "CENNZnet storage index and HTTP service",
+  "main": "src/index.js",
+  "repository": "ssh://git@github.com/cennznet/api-sidecar",
+  "author": "developers@centrality.ai",
+  "license": "Apache",
+  "dependencies": {
+    "fastify": "^3.22.0",
+    "mongoose": "^6.0.9"
+  }
+}
