@@ -1,14 +1,14 @@
 const { Schema } = require('mongoose');
 
-const nftWalletSchema = new Schema({
-    address: String,
+const NftWalletSchema = new Schema({
+    _id: String,
     tokens: [{
         collectionId: Number,
         seriesId: Number,
         serialNumber: Number,
-    }],
-});
+    }]
+})
 
 module.exports = {
-    nftWalletSchema
+    NftWalletSchema
 }
