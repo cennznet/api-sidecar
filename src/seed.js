@@ -9,54 +9,50 @@ async function bootstrap() {
     await mongoose.connect(connectionStr);
 
     const NftWalletSchema = new Schema({
-    address: String,
-    tokens: [{
-        collectionId: Number,
-        seriesId: Number,
-        tokenId: Number,
-    }]
+        _id: String,
+        tokens: [{
+            collectionId: Number,
+            seriesId: Number,
+            serialNumber: Number,
+        }]
     });
 
-    const NftWallet = mongoose.model('NftWallet', NftWalletSchema);
+    const NftWallet = mongoose.model('nftwallet', NftWalletSchema);
 
     // Create an instance of model SomeModel
     const nftWallet = new NftWallet({
-        address: '5FWizEtxJTb2wPjWEqtEDetYTjgmWRmUNvRpMBh6ZDX4JJCt',
+        _id: '5FWizEtxJTb2wPjWEqtEDetYTjgmWRmUNvRpMBh6ZDX4JJCt',
         tokens: [
             {
                 collectionId: 1,
-                SeriesId: 1,
-                SerialNumber: 13
+                seriesId: 1,
+                serialNumber: 13
             },
             {
                 collectionId: 1,
-                SeriesId: 1,
-                SerialNumber: 12
+                seriesId: 1,
+                serialNumber: 12
             },
             {
                 collectionId: 0,
-                SeriesId: 0,
-                SerialNumber: 0
+                seriesId: 0,
+                serialNumber: 0
             }
         ]
     });
 
     // Save the new model instance, passing a callback
-    await nftWallet.save(function (err) {
-        if (err) console.error(err);
-    });
+    await nftWallet.save();
     const nftWallet2 = new NftWallet({ 
-        address: '5FxQFnffWMLrJYH5gKhGMFYxiSboz2Vz5VFFueBGLqn5WiGd',
+        _id: '5FxQFnffWMLrJYH5gKhGMFYxiSboz2Vz5VFFueBGLqn5WiGd',
         tokens: [{
             collectionId: 3,
-            SeriesId: 5,
-            SerialNumber: 13
+            seriesId: 5,
+            serialNumber: 13
         }]
     });
     // Save the new model instance, passing a callback
-    await nftWallet2.save(function (err) {
-        if (err) console.error(err);
-    })
+    await nftWallet2.save();
 }
 
 bootstrap()
