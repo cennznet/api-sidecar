@@ -6,6 +6,10 @@
   "repository": "ssh://git@github.com/cennznet/api-sidecar",
   "author": "developers@centrality.ai",
   "license": "Apache",
+  "scripts": {
+    "api": "node src/api/index.js",
+    "seed": "node src/seedFake.js"
+  },
   "dependencies": {
     "fastify": "^3.22.0",
     "fastify-mongodb": "^4.1.0",

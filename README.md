@@ -5,4 +5,10 @@ CENNZnet sidecar provides an HTTP API and actively indexes database alongside a 
 yarn run:indexer
 
 # Run API service
-yarn run:api
+yarn api
+
+# query test data
+```bash
+yarn seed && yarn api
+curl localhost:3000/nftWallet/5FWizEtxJTb2wPjWEqtEDetYTjgmWRmUNvRpMBh6ZDX4JJCt
+ ```
