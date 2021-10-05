@@ -209,7 +209,7 @@ async function transferListingTokensToOwner(newOwner, listingId) {
         });
         await nftWallet1.save();
         const newOwnersWallet = await NftWallet.findById(newOwner);
-        const newActiveListing = newOwnersWallet ? newOwnersWallet.activeListing.push(listingId) : [listingId];
+        const newActiveListing = newOwnersWallet ? newOwnersWallet.activeListing : [];
         const newTokens = newOwnersWallet ? [...newOwnersWallet.tokens, ...tokens] : tokens;
         const nftWallet2 = new NftWallet({
             _id: newOwner,
