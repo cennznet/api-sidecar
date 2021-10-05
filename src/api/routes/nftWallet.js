@@ -1,5 +1,5 @@
 async function routes (fastify, options) {
-    const collection = fastify.mongo.db.collection('nftWallet')
+    const collection = fastify.mongo.db.collection('nftwallets')
 
     fastify.get('/nftWallet/:address', async (request, reply) => {
       const result = await collection.findOne({ address: request.params.address })
