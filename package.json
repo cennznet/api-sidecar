@@ -9,7 +9,8 @@
   "scripts": {
     "api": "node src/api/index.js",
     "seed": "node src/seedFake.js",
-    "scan:current": "node src/scanner/scanCurrent.js"
+    "scan:current": "node src/scanner/scanCurrent.js",
+    "scan:old": "node src/scanner/nftOwnersAtBlock.js"
   },
   "dependencies": {
     "@cennznet/api": "^1.5.0-alpha.3",

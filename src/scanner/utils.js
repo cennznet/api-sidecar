@@ -138,7 +138,6 @@ async function processNftEventData(dataFetched, method, api, blockHash) {
 }
 
 exports.processNftEventData = processNftEventData;
-
 async function saveWalletData(address, activeListing, tokenList) {
     try {
         logger.info(`saving wallet data ${tokenList} for owner ${address} in db`);
@@ -147,11 +146,12 @@ async function saveWalletData(address, activeListing, tokenList) {
         const update = { $push: { tokens: { $each: tokens } } };
         const options = { upsert: true, new: true, setDefaultsOnInsert: true }; // create new if record does not exist, else update
         await NftWallet.updateOne(filter, update, options);
-
     } catch (e) {
         logger.error(`saving wallet data ${tokenList} for owner ${address} in db failed:: ${e}`);
     }
 }
+
+exports.saveWalletData = saveWalletData;
 
 async function saveListingData(listingId, seller, tokenList) {
     try {
@@ -171,6 +171,8 @@ async function saveListingData(listingId, seller, tokenList) {
         logger.error(`saving listing for id ${listingId} for seller ${seller} in db failed::${e}`);
     }
 }
+
+exports.saveListingData = saveListingData;
 
 async function transferListingTokensToOwner(newOwner, listingId) {
     try {
