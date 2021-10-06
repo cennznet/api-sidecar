@@ -1,4 +1,4 @@
-const {processEventData, processExtrinsicData} = require('./utils');
+const {processNftEventData, processNftExtrinsicData} = require('./utils');
 
 const { Api } = require('@cennznet/api');
 require("dotenv").config();
@@ -12,7 +12,6 @@ async function main (networkName) {
     logger.info(`Connect to cennznet network ${networkName}`);
 
     const connectionStr = `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/admin`;
-    logger.info(connectionStr);
     await mongoose.connect(connectionStr);
 
     await api.rpc.chain
@@ -28,7 +27,7 @@ async function main (networkName) {
                     const { section, method, data } = event;
                     if (section === 'nft') {
                         const dataFetched = data.toHuman();
-                        await processEventData(dataFetched, method, api);
+                        await processNftEventData(dataFetched, method, api);
                     }
                 })
             );
@@ -38,7 +37,7 @@ async function main (networkName) {
             const filterSignedNFTExtrinsics = extrinsics.filter(ext => ext.isSigned && ext.method.section === 'nft' &&
                 (ext.method.method === 'burnBatch' || ext.method.method === 'burn'));
             if (filterSignedNFTExtrinsics.length > 0) {
-                await processExtrinsicData(filterSignedNFTExtrinsics);
+                await processNftExtrinsicData(filterSignedNFTExtrinsics);
             }
         });
 }

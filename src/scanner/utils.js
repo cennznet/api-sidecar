@@ -2,7 +2,7 @@ require("dotenv").config();
 const logger = require('../logger');
 const { NftWallet, NftListing } = require('../mongo/models');
 
-async function processExtrinsicData(extrinsics) {
+async function processNftExtrinsicData(extrinsics) {
     await Promise.all(
         extrinsics.map(async (extrinsic) =>{
             const args = extrinsic.method.args;
@@ -13,19 +13,21 @@ async function processExtrinsicData(extrinsics) {
                     const seriesId = args[1];
                     const serialNumbers = args[2];
                     await burnWalletNFT(owner, collectionId, seriesId, serialNumbers);
+                    break;
                 }
                 case 'burn':{
                     const token = args[0];
                     const owner = extrinsic.signer;
                     await burnWalletNFT(owner, token[0], token[1], [token[2]]);
+                    break;
                 }
             }
         })
     );
 }
-exports.processExtrinsicData = processExtrinsicData;
+exports.processNftExtrinsicData = processNftExtrinsicData;
 
-async function processEventData(dataFetched, method, api) {
+async function processNftEventData(dataFetched, method, api, blockHash) {
     logger.info(`Event triggered::${method}`);
     switch (method) {
         case 'CreateToken': {
@@ -52,10 +54,15 @@ async function processEventData(dataFetched, method, api) {
             const quantity = dataFetched[2];
             const owner = dataFetched[3];
             let tokens = [];
-            const currentNextIndex = await api.query.nft.nextSerialNumber(collectionId, seriesId);
-            let startIndex = currentNextIndex.toNumber() - quantity; // as the event has already occurred current next index will be next
+            let nextIndex;
+            if (blockHash) {
+                nextIndex = await api.query.nft.nextSerialNumber.at(blockHash, collectionId, seriesId);
+            } else {
+                nextIndex = await api.query.nft.nextSerialNumber(collectionId, seriesId);
+            }
+            let startIndex = nextIndex.toNumber() - quantity; // as the event has already occurred current next index will be next
 
-            for (let i = startIndex; i < currentNextIndex.toNumber(); i++) {
+            for (let i = startIndex; i < nextIndex.toNumber(); i++) {
                 tokens.push([collectionId, seriesId, i]);
             }
             await saveWalletData(owner, [], tokens);
@@ -70,7 +77,12 @@ async function processEventData(dataFetched, method, api) {
         }
         case 'FixedPriceSaleListed': {
             const listingId = dataFetched[1];
-            const listingDetails = (await api.query.nft.listings(listingId)).unwrapOrDefault();
+            let listingDetails;
+            if (blockHash) {
+                listingDetails = (await api.query.nft.listings.at(blockHash, listingId)).unwrapOrDefault();
+            } else {
+                listingDetails = (await api.query.nft.listings(listingId)).unwrapOrDefault();
+            }
             const details = listingDetails.asFixedPrice.toJSON();
             const tokens = details.tokens;
             const listingOwner = details.seller;
@@ -80,7 +92,12 @@ async function processEventData(dataFetched, method, api) {
         }
         case 'AuctionOpen': {
             const listingId = dataFetched[1];
-            const listingDetails = (await api.query.nft.listings(listingId)).unwrapOrDefault();
+            let listingDetails;
+            if (blockHash) {
+                listingDetails = (await api.query.nft.listings.at(blockHash, listingId)).unwrapOrDefault();
+            } else {
+                listingDetails = (await api.query.nft.listings(listingId)).unwrapOrDefault();
+            }
             const details = listingDetails.asAuction.toJSON();
             const tokens = details.tokens;
             const listingOwner = details.seller;
@@ -108,32 +125,26 @@ async function processEventData(dataFetched, method, api) {
             const listingId = dataFetched[1];
             // delete listing from db
             await NftListing.findByIdAndRemove(listingId);
-            // TODO - remove from NFTWallet
             break;
         }
         case 'AuctionClosed': {
             const listingId = dataFetched[1];
             // delete listing from db
             await NftListing.findByIdAndRemove(listingId);
-            // TODO - remove from NFTWallet
             break;
         }
     }
 
 }
 
-exports.processEventData = processEventData;
+exports.processNftEventData = processNftEventData;
 
 async function saveWalletData(address, activeListing, tokenList) {
     try {
         logger.info(`saving wallet data ${tokenList} for owner ${address} in db`);
         let tokens = tokenList.map(token => ({collectionId: token[0], seriesId: token[1], serialNumber: token[2]}));
-        const exist = await NftWallet.findById(address).exec();
-        if (exist) {
-            tokens = [...exist.tokens, ...tokens];
-        }
         const filter = { _id: address};
-        const update = { tokens: tokens };
+        const update = { $push: { tokens: { $each: tokens } } };
         const options = { upsert: true, new: true, setDefaultsOnInsert: true }; // create new if record does not exist, else update
         await NftWallet.updateOne(filter, update, options);
 
@@ -152,10 +163,9 @@ async function saveListingData(listingId, seller, tokenList) {
             tokens: tokens
         });
         await nftListing.save();
-        const sellerWallet = await NftWallet.findById(seller);
-        const activeListings = sellerWallet ? [...sellerWallet.activeListings, listingId] : [listingId];
+
         const filter = { _id: seller};
-        const update = { activeListings: activeListings };
+        const update = { $push: { activeListings: listingId } };
         await NftWallet.updateOne(filter, update);
     } catch (e) {
         logger.error(`saving listing for id ${listingId} for seller ${seller} in db failed::${e}`);
@@ -186,15 +196,13 @@ async function transferListingTokensToOwner(newOwner, listingId) {
         await NftWallet.updateOne(filter, update);
 
         // Add tokens to new owner
-        const newOwnersWallet = await NftWallet.findById(newOwner);
-        const newTokens = newOwnersWallet ? [...newOwnersWallet.tokens, ...tokens] : tokens;
         const filter1 = { _id: newOwner };
-        const update1 = { tokens: newTokens };
+        const update1 = { $push: { tokens: { $each: tokens } } };
         const options1 = { upsert: true, new: true, setDefaultsOnInsert: true }; // create new if record does not exist, else update
         await NftWallet.updateOne(filter1, update1, options1);
 
         // delete listing id from db
-        NftListing.findByIdAndRemove(listingId);
+        await NftListing.findByIdAndRemove(listingId);
 
     } catch (e) {
         logger.error(`transfer listing with id ${listingId} to new owner ${newOwner} failed:: ${e}`);
@@ -205,6 +213,7 @@ async function transferListingTokensToOwner(newOwner, listingId) {
 async function transferTokens(previousOwner, newOwner, tokenIds) {
     try {
         logger.info(`transfer ${tokenIds} tokens from ${previousOwner} to ${newOwner} `);
+        const tokens = tokenIds.map(token => ({collectionId: token[0], seriesId: token[1], serialNumber: token[2]}));
         const previousOwnersWallet = await NftWallet.findById(previousOwner);
         let filterPreviousOwnersToken = previousOwnersWallet.tokens;
 
@@ -220,14 +229,8 @@ async function transferTokens(previousOwner, newOwner, tokenIds) {
         await NftWallet.updateOne(filter, update);
 
         // Add tokens to new owner
-        const newOwnersWallet = await NftWallet.findById(newOwner);
-        if (newOwnersWallet) {
-            console.log('new owners wallet tokens::', newOwnersWallet.tokens);
-        }
-        const tokens = tokenIds.map(token => ({collectionId: token[0], seriesId: token[1], serialNumber: token[2]}));
-        const newTokens = newOwnersWallet ? [...newOwnersWallet.tokens, ...tokens] : tokens;
         const filter1 = { _id: newOwner };
-        const update1 = { tokens: newTokens };
+        const update1 = { $push: { tokens: { $each: tokens } } };
         const options1 = { upsert: true, new: true, setDefaultsOnInsert: true }; // create new if record does not exist, else update
         await NftWallet.updateOne(filter1, update1, options1);
     } catch (e) {
