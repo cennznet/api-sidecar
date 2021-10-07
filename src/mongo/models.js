@@ -30,8 +30,8 @@ NftListingSchema.index({ tokens: 1 });
 
 const LastBlockScanSchema = new Schema({
     _id: String,
-    blockNumber: String,
-    blockHash: String
+    processedBlock: String,
+    finalizedBlock: String
 }, { collection: LAST_BLOCK_SCANNED })
 
 module.exports = {

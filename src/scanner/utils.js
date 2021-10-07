@@ -2,14 +2,23 @@ require("dotenv").config();
 const logger = require('../logger');
 const { NftWallet, NftListing, LastBlockScan } = require('../mongo/models');
 
-async function updateLastBlockInDB(blockNumber, blockHash) {
+async function updateProcessedBlockInDB(blockNumber, finalizedBlock) {
     const filter = {};
-    const update = { blockNumber: blockNumber, blockHash: blockHash };
+    const update = finalizedBlock ? { processedBlock: blockNumber, finalizedBlock: finalizedBlock } : { processedBlock: blockNumber };
     const options = { upsert: true, new: true, setDefaultsOnInsert: true }; // create new if record does not exist, else update
     await LastBlockScan.updateOne(filter, update, options);
-    logger.info(`Updated the last blocknumber in db..${blockNumber}`);
+    logger.info(`Updated the last processed block in db..${blockNumber}`);
 }
-exports.updateLastBlockInDB = updateLastBlockInDB;
+exports.updateProcessedBlockInDB = updateProcessedBlockInDB;
+
+async function updateFinalizedBlock(finalizedBlock) {
+    const filter = {};
+    const update = { finalizedBlock: finalizedBlock };
+    const options = { upsert: true, new: true, setDefaultsOnInsert: true }; // create new if record does not exist, else update
+    await LastBlockScan.updateOne(filter, update, options);
+    logger.info(`Updated the last finalized block in db..${finalizedBlock}`);
+}
+exports.updateFinalizedBlock = updateFinalizedBlock;
 
 async function processNftExtrinsicData(extrinsics) {
     await Promise.all(

@@ -1,5 +1,5 @@
 const { Api } = require('@cennznet/api');
-const { saveListingData, saveWalletData, updateLastBlockInDB } = require('./utils');
+const { saveListingData, saveWalletData, updateProcessedBlockInDB, updateFinalizedBlock } = require('./utils');
 const mongoose = require('mongoose');
 const { NftWallet, NftListing  } = require('../mongo/models');
 require("dotenv").config();
@@ -12,12 +12,12 @@ async function main () {
     const connectionStr = `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/admin`;
     await mongoose.connect(connectionStr);
     // get current block
-    const signedBlock = await api.rpc.chain.getBlock();
+    let signedBlock = await api.rpc.chain.getBlock();
 
     // get current block height and hash
-    const currentHeight = signedBlock.block.header.number;
+    let currentHeight = signedBlock.block.header.number;
     const blockHash = signedBlock.block.header.hash;
-    await updateLastBlockInDB(currentHeight, blockHash);
+    await updateProcessedBlockInDB(currentHeight, currentHeight);
 
     const entries = await api.query.nft.tokenOwner.entries();
     logger.info(`Got all token entries`);
@@ -87,6 +87,11 @@ async function main () {
             }
         })
     );
+    // get current block again update finalized block
+    signedBlock = await api.rpc.chain.getBlock();
+
+    currentHeight = signedBlock.block.header.number;
+    await updateFinalizedBlock(currentHeight);
 
     await api.disconnect();
 }
