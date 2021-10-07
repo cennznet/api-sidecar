@@ -4,6 +4,7 @@ const { Schema } = mongoose;
 
 const NFT_WALLETS_COLLECTION = 'nftwallets';
 const NFT_LISTINGS_COLLECTION = 'nftlistings'
+const LAST_BLOCK_SCANNED = 'lastBlockScan'
 
 const NftWalletSchema = new Schema({
     _id: String, // CENNZnet ss58 address
@@ -27,9 +28,17 @@ const NftListingSchema = new Schema({
 }, { collection: NFT_LISTINGS_COLLECTION });
 NftListingSchema.index({ tokens: 1 });
 
+const LastBlockScanSchema = new Schema({
+    _id: String,
+    blockNumber: String,
+    blockHash: String
+}, { collection: LAST_BLOCK_SCANNED })
+
 module.exports = {
     NftListing: mongoose.model('NftListing', NftListingSchema),
     NftWallet: mongoose.model('NftWallet', NftWalletSchema),
+    LastBlockScan: mongoose.model('LastBlockScan', LastBlockScanSchema),
     NFT_LISTINGS_COLLECTION,
     NFT_WALLETS_COLLECTION,
+    LAST_BLOCK_SCANNED
 }

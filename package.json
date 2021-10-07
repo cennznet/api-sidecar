@@ -10,10 +10,12 @@
     "api": "node src/api/index.js",
     "seed": "node src/seedFake.js",
     "scan:current": "node src/scanner/scanCurrent.js",
-    "scan:old": "node src/scanner/nftOwnersAtBlock.js"
+    "scan:old": "node src/scanner/nftOwnersAtBlock.js",
+    "seed:db": "node src/scanner/nftOwnersAtBlock.js && node src/scanner/scanCurrent.js"
   },
   "dependencies": {
     "@cennznet/api": "^1.5.0-alpha.3",
+    "bignumber.js": "^9.0.0",
     "dotenv": "^8.2.0",
     "fastify": "^3.22.0",
     "fastify-mongodb": "^4.1.0",
