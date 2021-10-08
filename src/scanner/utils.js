@@ -2,9 +2,9 @@ require("dotenv").config();
 const logger = require('../logger');
 const { NftWallet, NftListing, LastBlockScan } = require('../mongo/models');
 
-async function updateProcessedBlockInDB(blockNumber, finalizedBlock) {
+async function updateProcessedBlockInDB(blockNumber) {
     const filter = {};
-    const update = finalizedBlock ? { processedBlock: blockNumber, finalizedBlock: finalizedBlock } : { processedBlock: blockNumber };
+    const update = { processedBlock: blockNumber };
     const options = { upsert: true, new: true, setDefaultsOnInsert: true }; // create new if record does not exist, else update
     await LastBlockScan.updateOne(filter, update, options);
     logger.info(`Updated the last processed block in db..${blockNumber}`);
