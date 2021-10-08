@@ -142,13 +142,13 @@ async function processNftEventData(dataFetched, method, api, blockHash) {
         case 'FixedPriceSaleClosed': {
             const listingId = dataFetched[1];
             // delete listing from db
-            await NftListing.findByIdAndRemove(listingId);
+            await deleteListing(listingId);
             break;
         }
         case 'AuctionClosed': {
             const listingId = dataFetched[1];
             // delete listing from db
-            await NftListing.findByIdAndRemove(listingId);
+            await deleteListing(listingId);
             break;
         }
     }
@@ -258,6 +258,27 @@ async function transferTokens(previousOwner, newOwner, tokenIds) {
     }
 }
 
+async function deleteListing(listingId) {
+    try {
+        const listingDetails = await NftListing.findById(listingId);
+        const owner = listingDetails.seller;
+
+        const ownersWallet = await NftWallet.findById(owner);
+        let activeListings = ownersWallet.activeListings;
+        activeListings = activeListings.filter(list => list !== listingId);
+
+        // Remove listing id from owner
+        const filter = { _id: owner};
+        const update = { activeListings: activeListings };
+        await NftWallet.updateOne(filter, update);
+
+        // delete listing
+        await NftListing.findByIdAndRemove(listingId);
+    } catch (e) {
+        logger.error(`Delete listing for id ${listingId} from owner failed:: ${e}`,);
+    }
+}
+
 async function burnWalletNFT(owner, collectionId, seriesId, serialNumbers) {
     try {
         logger.info(`Burn token: [${collectionId}, ${seriesId}, ${serialNumbers}]`);
@@ -274,6 +295,6 @@ async function burnWalletNFT(owner, collectionId, seriesId, serialNumbers) {
         const update = { tokens: tokensFiltered };
         await NftWallet.updateOne(filter, update);
     } catch (e) {
-        logger.error(`burn tokens [${collectionId}, ${seriesId}, ${serialNumbers}] from owner failed:: ${e}`,);
+        logger.error(`burn tokens [${collectionId}, ${seriesId}, ${serialNumbers}] from owner failed:: ${e}`);
     }
 }
