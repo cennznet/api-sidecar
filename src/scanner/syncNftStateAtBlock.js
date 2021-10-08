@@ -1,7 +1,6 @@
 const { Api } = require('@cennznet/api');
 const { saveListingData, saveWalletData, updateProcessedBlockInDB, updateFinalizedBlock } = require('./utils');
 const mongoose = require('mongoose');
-const { NftWallet, NftListing  } = require('../mongo/models');
 require("dotenv").config();
 const logger = require('../logger');
 
@@ -46,19 +45,6 @@ async function main () {
     await updateFinalizedBlock(finalizedBlock.toString());
 
     await api.disconnect();
-}
-
-function arraysAreEqual(chainTokens, dbTokens){
-    dbTokens.map(dt => {
-       if (chainTokens.find(ct => ct[0].toString() === dt.collectionId.toString() &&
-           ct[1].toString() === dt.seriesId.toString() &&
-           ct[2].toString() === dt.serialNumber.toString())) {
-         // exist
-       } else {
-           return false;
-       }
-    })
-    return true;
 }
 
 main().catch(console.error).finally(() => process.exit());

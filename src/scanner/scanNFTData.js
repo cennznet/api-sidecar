@@ -57,6 +57,8 @@ async function main (networkName) {
                     await updateProcessedBlockInDB(nextBlkToProcess);
                     nextBlkToProcess = nextBlkToProcess.plus(1);
                 }
+            } else {
+                logger.info(`Database has no record in lastBlockScan table`);
             }
             await sleep(5000);
         }
