@@ -11,10 +11,11 @@ async function main () {
     const connectionStr = `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/admin`;
     await mongoose.connect(connectionStr);
     // get current block
-    let signedBlock = await api.rpc.chain.getBlock();
+    let signedBlock = await api.derive.chain.bestNumberFinalized();
 
     // get current block height and hash
-    const currentHeight = signedBlock.block.header.number;
+    const currentHeight = signedBlock.toString();
+    logger.info(`current height ${currentHeight}`);
     await updateProcessedBlockInDB(currentHeight);
 
     const entries = await api.query.nft.tokenOwner.entries();

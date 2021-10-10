@@ -18,11 +18,15 @@ async function processDataAtBlockHash(api, blockHash, processingOldBlock) {
         })
     );
     const block = await api.rpc.chain.getBlock(blockHash);
-    const extrinsics = block.block.extrinsics.toHuman();
-    const filterSignedNFTExtrinsics = extrinsics.filter(ext => ext.isSigned && ext.method.section === 'nft' &&
-        (ext.method.method === 'burnBatch' || ext.method.method === 'burn'));
-    if (filterSignedNFTExtrinsics.length > 0) {
-        await processNftExtrinsicData(filterSignedNFTExtrinsics);
+    if (block) {
+        const extrinsics = block.block.extrinsics.toHuman();
+        const filterSignedNFTExtrinsics = extrinsics.filter(ext => ext.isSigned && ext.method.section === 'nft' &&
+            (ext.method.method === 'burnBatch' || ext.method.method === 'burn'));
+        if (filterSignedNFTExtrinsics.length > 0) {
+            await processNftExtrinsicData(filterSignedNFTExtrinsics);
+        }
+    } else {
+        logger.info(`Retrieving block details from rpc.chain.getBlock failed for hash ${blockHash}`)
     }
 }
 
