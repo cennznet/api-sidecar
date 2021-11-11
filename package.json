@@ -10,7 +10,8 @@
     "api": "node src/api/index.js",
     "seed": "node src/seedFake.js",
     "scan:start": "node src/scanner/scanNFTData.js",
-    "scan:syncState": "node src/scanner/syncNftStateAtBlock.js"
+    "scan:syncState": "node src/scanner/syncNftStateAtBlock.js",
+    "litho:stats": "node src/scanner/scanLithoStats.js"
   },
   "dependencies": {
     "@cennznet/api": "^1.5.0-alpha.3",
