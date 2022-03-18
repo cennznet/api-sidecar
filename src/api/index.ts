@@ -1,4 +1,3 @@
-// const Fastify = require('fastify');
 import Fastify from "fastify";
 import { routes } from "./routes/index";
 import { config } from "dotenv";

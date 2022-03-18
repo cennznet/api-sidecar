@@ -3,6 +3,7 @@ import { bnToBn, extractTime } from "@polkadot/util";
 
 let blockTime;
 
+// Convert a block number to date
 async function convertBlockToDate(api, blockNumber, date) {
 	blockTime = blockTime ? blockTime : await api.consts.babe.expectedBlockTime;
 	const value = blockTime.mul(bnToBn(blockNumber)).toNumber();
@@ -13,6 +14,7 @@ async function convertBlockToDate(api, blockNumber, date) {
 	return d;
 }
 
+// store in db all the relevant data for mint unique nft
 export async function trackUniqueMintData(
 	eventData,
 	api,
@@ -53,6 +55,7 @@ export async function trackUniqueMintData(
 	}
 }
 
+// mint series add all the tokens as per the count argument in the db
 export async function trackTokenSeriesData(
 	eventData,
 	api,
@@ -98,6 +101,7 @@ export async function trackTokenSeriesData(
 	}
 }
 
+// mint series add additional nft for a given collection, find next serialNumber at this blockhash and add more
 export async function trackAdditionalTokenData(
 	params,
 	eventData,
@@ -160,7 +164,7 @@ export async function trackAdditionalTokenData(
 		);
 	}
 }
-
+// common function to extract tokens from start to end index
 export async function extractTokenList(
 	startIndex,
 	endIndex,
@@ -180,6 +184,7 @@ export async function extractTokenList(
 	await trackEventDataSet(tokens);
 }
 
+// token series name update
 export async function trackSeriesNameData(
 	params,
 	api,
@@ -227,6 +232,7 @@ export async function trackSeriesNameData(
 	}
 }
 
+// Track transfers
 export async function trackTransferData(
 	params,
 	date,
@@ -262,6 +268,7 @@ export async function trackTransferData(
 	}
 }
 
+// Track batch of transfers
 export async function trackTransferBatchData(
 	params,
 	date,
@@ -316,6 +323,7 @@ export async function trackTransferBatchData(
 	}
 }
 
+// track burn related data
 export async function trackBurnData(params, date, txHash, blockNumber, owner) {
 	try {
 		const tokenId = JSON.stringify(params[0].value);
@@ -345,6 +353,7 @@ export async function trackBurnData(params, date, txHash, blockNumber, owner) {
 	}
 }
 
+// track batch of burn tokens
 export async function trackBurnBatchData(
 	params,
 	date,
@@ -381,6 +390,7 @@ export async function trackBurnBatchData(
 	}
 }
 
+// common function
 async function extractListingData(
 	tokenIds,
 	blockNumber,
@@ -412,6 +422,7 @@ async function extractListingData(
 	await trackEventDataSet(tokens);
 }
 
+// track sell data for batch
 export async function trackSellBundleData(
 	params,
 	api,
@@ -485,6 +496,7 @@ export async function trackSellBundleData(
 	}
 }
 
+// track sell data
 export async function trackSellData(
 	params,
 	api,
@@ -554,6 +566,7 @@ export async function trackSellData(
 	}
 }
 
+// common function
 async function extractTokenListingData(
 	tokens,
 	dataInserts,
@@ -573,6 +586,7 @@ async function extractTokenListingData(
 	await trackEventDataSet(dataInserts);
 }
 
+// track buy data
 export async function trackBuyData(
 	params,
 	blockHash,
@@ -664,6 +678,7 @@ async function extractAuctionData(
 	await trackEventDataSet(dataInserts);
 }
 
+// track auction data
 export async function trackAuctionData(
 	eventData,
 	params,
@@ -724,6 +739,7 @@ export async function trackAuctionData(
 	}
 }
 
+// track auction data for batch
 export async function trackAuctionBundleData(
 	eventData,
 	params,
@@ -796,6 +812,7 @@ export async function trackAuctionBundleData(
 	}
 }
 
+// track bid data
 export async function trackBidData(
 	params,
 	api,
@@ -858,6 +875,7 @@ export async function trackBidData(
 	}
 }
 
+// track cancel sale data
 export async function trackCancelSaleData(
 	params,
 	api,
@@ -932,6 +950,7 @@ export async function trackCancelSaleData(
 	}
 }
 
+// event to knw if a auction was closed
 export async function processAuctionSoldEvent(
 	event,
 	blockTimestamp,

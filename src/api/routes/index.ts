@@ -1,4 +1,3 @@
-//const nft = require('../controller/nfts');
 import {
 	getTokenDetails,
 	getListingDetails,
