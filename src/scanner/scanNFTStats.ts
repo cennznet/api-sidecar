@@ -23,8 +23,10 @@ import { Api } from "@cennznet/api";
 import { config } from "dotenv";
 import logger from "../logger";
 import { Vec } from "@polkadot/types-codec";
+import {u8aToString} from "@polkadot/util";
 
 config();
+export let supportedAssets = [];
 
 // find the event for the extrinsic
 function filterExtrinsicEvents(extrinsicIdx, events) {
@@ -266,10 +268,26 @@ async function getBlockInfoFromRedis(redisClient) {
 	}
 }
 
+async function fetchSupportedAssets(api) {
+	const assets = await api.rpc.genericAsset.registeredAssets();
+
+	const assetInfo = assets.map((asset) => {
+		const [tokenId, { symbol, decimalPlaces }] = asset;
+		return {
+			id: tokenId.toString(),
+			symbol: u8aToString(symbol),
+			decimals: decimalPlaces.toNumber(),
+		};
+	});
+	supportedAssets = assetInfo;
+}
+
+
 async function main(networkName) {
 	networkName = networkName || "azalea";
 
 	const api = await Api.create({ provider: process.env.provider });
+	await fetchSupportedAssets(api);
 	const redisClient = createClient();
 	await redisClient.connect();
 	// await redisClient.set('processedBlock', '11408530');

@@ -1,5 +1,6 @@
 import { trackEventData, trackEventDataSet } from "./dbOperations";
 import { bnToBn, extractTime } from "@polkadot/util";
+import {accuracyFormat} from "../scanner/formatBalance";
 
 let blockTime;
 
@@ -436,9 +437,10 @@ export async function trackSellBundleData(
 		const tokenIds = params[0].value;
 		const buyer = params[1].value;
 		const paymentAsset = params[2].value;
-		const fixedPrice = api.registry
+		const fixedPriceRaw = api.registry
 			.createType(params[3].type, params[3].value)
 			.toString();
+		const fixedPrice = accuracyFormat(fixedPriceRaw, paymentAsset);
 		const duration = params[4].value;
 		const marketPlaceId = params[5] ? params[5].value : null;
 		const listingId = eventData[1];
@@ -510,9 +512,10 @@ export async function trackSellData(
 		const tokenIds = params[0].value;
 		const buyer = params[1].value;
 		const paymentAsset = params[2].value;
-		const fixedPrice = api.registry
+		const fixedPriceRaw = api.registry
 			.createType(params[3].type, params[3].value)
 			.toString();
+		const fixedPrice = accuracyFormat(fixedPriceRaw, paymentAsset);
 		const duration = params[4].value;
 		const marketPlaceId = params[5] ? params[5].value : null;
 		const listingId = eventData[1];
@@ -608,12 +611,13 @@ export async function trackBuyData(
 		).unwrapOrDefault();
 		const details = listingDetail.asFixedPrice.toJSON();
 		console.log("details::", details);
+		const fixedPrice = accuracyFormat(details.fixedPrice, details.paymentAsset);
 		const dataInserts = [];
 		const listingData = {
 			eventData: {
 				type: "Fixed",
 				assetId: details.paymentAsset,
-				price: details.fixedPrice,
+				price: fixedPrice,
 				txHash: txHash,
 				date: date,
 				seller: details.seller.toString(),
@@ -624,7 +628,7 @@ export async function trackBuyData(
 		};
 		dataInserts.push([
 			listingId,
-			1,
+			1, // type for listing
 			blockNumber,
 			JSON.stringify(listingData),
 			owner,
@@ -634,7 +638,7 @@ export async function trackBuyData(
 				type: "Fixed",
 				txHash: txHash,
 				listingId: listingId,
-				amount: details.fixedPrice,
+				amount: fixedPrice,
 				assetId: details.paymentAsset,
 				date: date,
 				owner: owner,
@@ -667,6 +671,7 @@ async function extractAuctionData(
 	owner
 ) {
 	const dataInserts = [];
+	// 1 is for listing type
 	dataInserts.push([listingId, 1, blockNumber, JSON.stringify(listingData)]);
 	dataInserts.push([
 		JSON.stringify(tokenId),
@@ -692,9 +697,10 @@ export async function trackAuctionData(
 		const listingId = eventData[1];
 		const tokenId = params[0].value;
 		const paymentAsset = params[1].value;
-		const reservedPrice = api.registry
+		const reservedPriceRaw = api.registry
 			.createType(params[2].type, params[2].value)
 			.toString();
+		const reservedPrice = accuracyFormat(reservedPriceRaw, paymentAsset);
 		const duration = params[3].value;
 		const listingData = {
 			eventData: {
@@ -753,9 +759,10 @@ export async function trackAuctionBundleData(
 		const listingId = eventData[1];
 		const tokenIds = params[0].value;
 		const paymentAsset = params[1].value;
-		const reservedPrice = api.registry
+		const reservedPriceRaw = api.registry
 			.createType(params[2].type, params[2].value)
 			.toString();
+		const reservedPrice = accuracyFormat(reservedPriceRaw, paymentAsset);
 		const duration = params[3].value;
 		const closeDate = await convertBlockToDate(
 			api,
@@ -790,7 +797,7 @@ export async function trackAuctionBundleData(
 		const dataInserts = [];
 		dataInserts.push([
 			listingId,
-			1,
+			1, // for listing
 			blockNumber,
 			JSON.stringify(listingData),
 			owner,
@@ -824,7 +831,7 @@ export async function trackBidData(
 ) {
 	try {
 		const listingId = params[0].value;
-		const amount = api.registry
+		const amountRaw = api.registry
 			.createType(params[1].type, params[1].value)
 			.toString();
 		const listingDetail = (
@@ -832,6 +839,7 @@ export async function trackBidData(
 		).unwrapOrDefault();
 		const details = listingDetail.asAuction.toJSON();
 		console.log("details::", details);
+		const amount = accuracyFormat(amountRaw, details.paymentAsset);
 		const dataInserts = [];
 		const listingData = {
 			eventData: {
@@ -892,17 +900,19 @@ export async function trackCancelSaleData(
 		const listingDetail = (
 			await api.query.nft.listings.at(blockHashBeforeBuy, listingId)
 		).unwrapOrDefault();
-		let details, type, price;
+		let details, type, priceRaw;
 		if (listingDetail.isFixedPrice) {
 			details = listingDetail.asFixedPrice.toJSON();
 			type = "Fixed";
-			price = details.fixedPrice;
+			priceRaw = details.fixedPrice;
 		} else {
 			details = listingDetail.asAuction.toJSON();
 			type = "Auction";
-			price = details.reservePrice;
+			priceRaw = details.reservePrice;
 		}
+		const price = accuracyFormat(priceRaw, details.paymentAsset);
 		const dataInserts = [];
+
 		const listingData = {
 			eventData: {
 				type: type,
@@ -961,7 +971,7 @@ export async function processAuctionSoldEvent(
 	try {
 		const { data } = event;
 		const date = blockTimestamp;
-		let [, listingId, assetId, price, winner] = data.toJSON();
+		let [, listingId, assetId, priceRaw, winner] = data.toJSON();
 		const blockHashBeforeBuy = (
 			await api.rpc.chain.getBlockHash(blockNumber - 1)
 		).toString();
@@ -971,6 +981,8 @@ export async function processAuctionSoldEvent(
 		const details = listingDetail.asAuction.toJSON();
 		const dataInserts = [];
 		const closeDate = await convertBlockToDate(api, details.close, date);
+		const price = accuracyFormat(priceRaw, details.paymentAsset);
+
 		const listingData = {
 			eventData: {
 				type: "Auction",
