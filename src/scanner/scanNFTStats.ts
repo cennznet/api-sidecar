@@ -18,7 +18,7 @@ import {
 	trackCancelSaleData,
 	trackBidData,
 	processAuctionSoldEvent,
-} from "./utility";
+} from "./utils";
 import { Api } from "@cennznet/api";
 import { config } from "dotenv";
 import logger from "../logger";
