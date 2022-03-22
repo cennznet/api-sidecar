@@ -17,7 +17,7 @@ export async function trackTransferData(
                 owner: newOwner,
                 txHash: txHash,
             },
-            eventType: "TRANSFER",
+            eventType: "NFT_TRANSFERED",
         };
         const type = 0;
         await trackEventData(
@@ -68,7 +68,7 @@ export async function trackTransferBatchData(
                 owner: newOwner,
                 txHash: txHash,
             },
-            eventType: "TRANSFER",
+            eventType: "NFT_TRANSFERED",
         };
         const tokens = [];
         let type = 0; // nft token data

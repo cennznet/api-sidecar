@@ -23,7 +23,7 @@ export async function trackSeriesNameData(
                 owner: owner,
                 txHash: txHash,
             },
-            eventType: "SERIES NAMED",
+            eventType: "SERIES_NAMED",
         };
         const type = 0; // nft token data
         const nextSerialNumber = (

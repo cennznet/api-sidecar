@@ -10,7 +10,7 @@ export async function trackBurnData(params, date, txHash, blockNumber, owner) {
                 owner: null,
                 txHash: txHash,
             },
-            eventType: "BURN",
+            eventType: "NFT_BURNED",
         };
         const type = 0;
         await trackEventData(
@@ -48,7 +48,7 @@ export async function trackBurnBatchData(
                 owner: null,
                 txHash: txHash,
             },
-            eventType: "BURN",
+            eventType: "NFT_BURNED",
         };
         const tokens = [];
         serialNumbers.forEach((serialNumber) => {
