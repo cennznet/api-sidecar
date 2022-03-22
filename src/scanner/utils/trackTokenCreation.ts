@@ -1,14 +1,17 @@
 // store in db all the relevant data for mint unique nft
-import {trackEventData, trackEventDataSet} from "@/src/scanner/dbOperations";
+import {trackEventData, trackEventDataSet} from "../dbOperations";
+import {Api} from "@cennznet/api";
+import {Params} from "./commonUtils";
+import {u128} from "@cennznet/types";
 
 export async function trackUniqueMintData(
-    eventData,
-    api,
-    params,
-    date,
-    owner,
-    txHash,
-    blockNumber
+    eventData: number[],
+    api: Api,
+    params: Params,
+    date: Date,
+    owner: string,
+    txHash: string,
+    blockNumber: number
 ) {
     try {
         const tokenId = JSON.stringify(eventData[1]); // tokenId in format [17,5,0] - [collectionId, seriesId, serialNo]
@@ -43,13 +46,13 @@ export async function trackUniqueMintData(
 
 // mint series add all the tokens as per the count argument in the db
 export async function trackTokenSeriesData(
-    eventData,
-    api,
-    params,
-    date,
-    owner,
-    txHash,
-    blockNumber
+    eventData: number[],
+    api: Api,
+    params: Params,
+    date: Date,
+    owner: string,
+    txHash: string,
+    blockNumber: number
 ) {
     try {
         const collectionId = eventData[0];
@@ -89,21 +92,21 @@ export async function trackTokenSeriesData(
 
 // mint series add additional nft for a given collection, find next serialNumber at this blockhash and add more
 export async function trackAdditionalTokenData(
-    params,
-    eventData,
-    api,
-    blockHash,
-    date,
-    owner,
-    txHash,
-    blockNumber
+    params: Params,
+    eventData: number[],
+    api: Api,
+    blockHash: string,
+    date: Date,
+    owner: string,
+    txHash: string,
+    blockNumber: number
 ) {
     try {
         const collectionId = eventData[0];
         const seriesId = eventData[1];
         const noOfTokens = eventData[2]; // quantity
         const nextSerialNumber = (
-            await api.query.nft.nextSerialNumber.at(blockHash, collectionId, seriesId)
+            await api.query.nft.nextSerialNumber.at(blockHash, collectionId, seriesId) as u128
         ).toNumber();
         const imgUrl = api.query.nft.seriesMetadataScheme
             ? (
@@ -152,14 +155,14 @@ export async function trackAdditionalTokenData(
 }
 // common function to extract tokens from start to end index
 export async function extractTokenList(
-    startIndex,
-    endIndex,
-    collectionId,
-    seriesId,
-    type,
-    blockNumber,
-    tokenData,
-    owner
+    startIndex: number,
+    endIndex: number,
+    collectionId: string | number,
+    seriesId: string | number,
+    type: number,
+    blockNumber: number,
+    tokenData: {},
+    owner: string
 ) {
     const tokens = [];
     for (let i = startIndex; i < endIndex; i++) {

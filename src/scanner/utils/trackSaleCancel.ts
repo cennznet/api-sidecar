@@ -1,14 +1,16 @@
 // track cancel sale data
 import {accuracyFormat} from "../formatBalance";
-import {extractTokenListingData} from "./commonUtils";
+import {extractTokenListingData, Params} from "./commonUtils";
+import {Api} from "@cennznet/api";
+import {Listing, Option} from "@cennznet/types";
 
 export async function trackCancelSaleData(
-    params,
-    api,
-    blockNumber,
-    txHash,
-    date,
-    owner
+    params: Params[],
+    api: Api,
+    blockNumber: number,
+    txHash: string,
+    date: Date,
+    owner: string
 ) {
     try {
         const listingId = params[0].value;
@@ -16,7 +18,7 @@ export async function trackCancelSaleData(
             await api.rpc.chain.getBlockHash(blockNumber - 1)
         ).toString();
         const listingDetail = (
-            await api.query.nft.listings.at(blockHashBeforeBuy, listingId)
+            await api.query.nft.listings.at(blockHashBeforeBuy, listingId) as Option<Listing>
         ).unwrapOrDefault();
         let details, type, priceRaw;
         if (listingDetail.isFixedPrice) {

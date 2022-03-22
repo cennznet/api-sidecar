@@ -2,6 +2,12 @@
 import {trackEventDataSet} from "../dbOperations";
 import {bnToBn, extractTime} from "@polkadot/util";
 
+export interface Params {
+    name: string,
+    value: string,
+    type: string
+}
+
 export async function extractTokenListingData(
     tokens,
     dataInserts,

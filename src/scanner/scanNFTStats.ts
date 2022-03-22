@@ -1,24 +1,34 @@
 import { createClient } from "redis";
 import { EventRecord } from "@polkadot/types/interfaces";
+import {trackCancelSaleData} from './utils/trackSaleCancel';
+import {trackAuctionData, processAuctionSoldEvent, trackAuctionBundleData} from './utils/trackTokenAuction';
+import {trackBurnBatchData, trackBurnData} from './utils/trackTokenBurn';
+import {trackBuyData} from './utils/trackTokenBuy';
+import {trackAdditionalTokenData, trackTokenSeriesData, trackUniqueMintData} from './utils/trackTokenCreation';
+import {trackSeriesNameData} from './utils/trackTokenName';
+import {trackSellBundleData, trackSellData} from './utils/trackTokenSell';
+import {trackTransferBatchData, trackTransferData} from './utils/trackTokenTransfers';
+import {trackBidData} from './utils/trackBidData';
 
-import {
-	trackBurnData,
-	trackUniqueMintData,
-	trackTokenSeriesData,
-	trackAdditionalTokenData,
-	trackSellData,
-	trackSeriesNameData,
-	trackTransferData,
-	trackTransferBatchData,
-	trackBurnBatchData,
-	trackSellBundleData,
-	trackBuyData,
-	trackAuctionData,
-	trackAuctionBundleData,
-	trackCancelSaleData,
-	trackBidData,
-	processAuctionSoldEvent,
-} from "./utils";
+
+// import {
+// 	trackBurnData,
+// 	trackUniqueMintData,
+// 	trackTokenSeriesData,
+// 	trackAdditionalTokenData,
+// 	trackSellData,
+// 	trackSeriesNameData,
+// 	trackTransferData,
+// 	trackTransferBatchData,
+// 	trackBurnBatchData,
+// 	trackSellBundleData,
+// 	trackBuyData,
+// 	trackAuctionData,
+// 	trackAuctionBundleData,
+// 	trackCancelSaleData,
+// 	trackBidData,
+// 	processAuctionSoldEvent,
+// } from "./utils";
 import { Api } from "@cennznet/api";
 import { config } from "dotenv";
 import logger from "../logger";
@@ -346,7 +356,7 @@ async function main(networkName) {
 					auctionSoldEvent.event,
 					blockTimestamp,
 					blockNumber,
-					blockHash,
+					blockHash.toString(),
 					api
 				);
 			}

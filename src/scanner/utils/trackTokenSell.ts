@@ -1,15 +1,16 @@
 // track sell data for batch
-import {accuracyFormat} from "@/src/scanner/formatBalance";
-import { convertBlockToDate, extractListingData } from "./commonUtils";
+import {accuracyFormat} from "../formatBalance";
+import {convertBlockToDate, extractListingData, Params} from "./commonUtils";
+import {Api} from "@cennznet/api";
 
 export async function trackSellBundleData(
-    params,
-    api,
-    eventData,
-    txHash,
-    date,
-    owner,
-    blockNumber
+    params: Params,
+    api: Api,
+    eventData: number[],
+    txHash: string,
+    date: Date,
+    owner: string,
+    blockNumber: number
 ) {
     try {
         const tokenIds = params[0].value;
@@ -78,13 +79,13 @@ export async function trackSellBundleData(
 
 // track sell data
 export async function trackSellData(
-    params,
-    api,
-    eventData,
-    txHash,
-    date,
-    owner,
-    blockNumber
+    params: Params,
+    api: Api,
+    eventData: number[],
+    txHash: string,
+    date: Date,
+    owner: string,
+    blockNumber: number
 ) {
     try {
         const tokenIds = params[0].value;

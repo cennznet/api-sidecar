@@ -1,15 +1,17 @@
 // track buy data
 import {accuracyFormat} from "../formatBalance";
-import { extractTokenListingData } from "./commonUtils";
+import {extractTokenListingData, Params} from "./commonUtils";
+import {Api} from "@cennznet/api";
+import {Listing, Option} from "@cennznet/types";
 
 export async function trackBuyData(
-    params,
-    blockHash,
-    api,
-    blockNumber,
-    txHash,
-    date,
-    owner
+    params: Params,
+    blockHash: string,
+    api: Api,
+    blockNumber: number,
+    txHash: string,
+    date: Date,
+    owner: string
 ) {
     try {
         const listingId = params[0].value;
@@ -19,7 +21,7 @@ export async function trackBuyData(
             await api.rpc.chain.getBlockHash(blockNumber - 1)
         ).toString();
         const listingDetail = (
-            await api.query.nft.listings.at(blockHashBeforeBuy, listingId)
+            await api.query.nft.listings.at(blockHashBeforeBuy, listingId) as Option<Listing>
         ).unwrapOrDefault();
         const details = listingDetail.asFixedPrice.toJSON();
         console.log("details::", details);

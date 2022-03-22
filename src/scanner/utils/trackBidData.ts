@@ -1,23 +1,25 @@
 // track bid data
 import {accuracyFormat} from "../formatBalance";
-import { extractTokenListingData } from "./commonUtils";
+import {extractTokenListingData, Params} from "./commonUtils";
+import {Api} from "@cennznet/api";
+import {Balance, Listing, Option} from "@cennznet/types"
 
 export async function trackBidData(
-    params,
-    api,
-    blockHash,
-    owner,
-    txHash,
-    date,
-    blockNumber
+    params: Params[],
+    api: Api,
+    blockHash: string,
+    owner: string,
+    txHash: string,
+    date: Date,
+    blockNumber: number
 ) {
     try {
         const listingId = params[0].value;
-        const amountRaw = api.registry
-            .createType(params[1].type, params[1].value)
-            .toString();
+        let amountRaw: undefined | string = api.registry
+            .createType(params[1].type, params[1].value);
+        amountRaw  = amountRaw ? (amountRaw as unknown as Balance).toString() : '0';
         const listingDetail = (
-            await api.query.nft.listings.at(blockHash, listingId)
+            await api.query.nft.listings.at(blockHash, listingId) as Option<Listing>
         ).unwrapOrDefault();
         const details = listingDetail.asAuction.toJSON();
         console.log("details::", details);

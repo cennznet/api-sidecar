@@ -1,7 +1,8 @@
 // track burn related data
 import {trackEventData, trackEventDataSet} from "../dbOperations";
+import {Params} from "./commonUtils";
 
-export async function trackBurnData(params, date, txHash, blockNumber, owner) {
+export async function trackBurnData(params: Params, date: Date, txHash: string, blockNumber: number, owner: string) {
     try {
         const tokenId = JSON.stringify(params[0].value);
         const tokenData = {
@@ -32,11 +33,11 @@ export async function trackBurnData(params, date, txHash, blockNumber, owner) {
 
 // track batch of burn tokens
 export async function trackBurnBatchData(
-    params,
-    date,
-    txHash,
-    blockNumber,
-    owner
+    params: Params,
+    date: Date,
+    txHash: string,
+    blockNumber: number,
+    owner: string
 ) {
     try {
         const collectionId = params[0].value;

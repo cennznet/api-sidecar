@@ -1,14 +1,17 @@
 // token series name update
-import {extractTokenList} from "@/src/scanner/utility";
+import {Params} from "./commonUtils";
+import {Api} from "@cennznet/api";
+import {u128} from "@cennznet/types";
+import {extractTokenList} from "./trackTokenCreation";
 
 export async function trackSeriesNameData(
-    params,
-    api,
-    date,
-    owner,
-    txHash,
-    blockHash,
-    blockNumber
+    params: Params,
+    api: Api,
+    date: Date,
+    owner: string,
+    txHash: string,
+    blockHash: string,
+    blockNumber: number
 ) {
     try {
         const collectionId = params[0].value;
@@ -27,7 +30,7 @@ export async function trackSeriesNameData(
         };
         const type = 0; // nft token data
         const nextSerialNumber = (
-            await api.query.nft.nextSerialNumber.at(blockHash, collectionId, seriesId)
+            await api.query.nft.nextSerialNumber.at(blockHash, collectionId, seriesId) as u128
         ).toNumber();
         await extractTokenList(
             0,

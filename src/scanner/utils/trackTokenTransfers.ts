@@ -1,8 +1,9 @@
 // Track transfers
-import {trackEventData, trackEventDataSet} from "@/src/scanner/dbOperations";
+import {trackEventData, trackEventDataSet} from "../dbOperations";
+import {Params} from "@/src/scanner/utils/commonUtils";
 
 export async function trackTransferData(
-    params,
+    params: Params,
     date,
     txHash,
     blockNumber,
