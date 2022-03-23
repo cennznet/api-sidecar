@@ -1,39 +1,31 @@
 import { createClient } from "redis";
 import { EventRecord } from "@polkadot/types/interfaces";
-import {trackCancelSaleData} from './utils/trackSaleCancel';
-import {trackAuctionData, processAuctionSoldEvent, trackAuctionBundleData} from './utils/trackTokenAuction';
-import {trackBurnBatchData, trackBurnData} from './utils/trackTokenBurn';
-import {trackBuyData} from './utils/trackTokenBuy';
-import {trackAdditionalTokenData, trackTokenSeriesData, trackUniqueMintData} from './utils/trackTokenCreation';
-import {trackSeriesNameData} from './utils/trackTokenName';
-import {trackSellBundleData, trackSellData} from './utils/trackTokenSell';
-import {trackTransferBatchData, trackTransferData} from './utils/trackTokenTransfers';
-import {trackBidData} from './utils/trackBidData';
+import { trackCancelSaleData } from "./utils/trackSaleCancel";
+import {
+	trackAuctionData,
+	processAuctionSoldEvent,
+	trackAuctionBundleData,
+} from "./utils/trackTokenAuction";
+import { trackBurnBatchData, trackBurnData } from "./utils/trackTokenBurn";
+import { trackBuyData } from "./utils/trackTokenBuy";
+import {
+	trackAdditionalTokenData,
+	trackTokenSeriesData,
+	trackUniqueMintData,
+} from "./utils/trackTokenCreation";
+import { trackSeriesNameData } from "./utils/trackTokenName";
+import { trackSellBundleData, trackSellData } from "./utils/trackTokenSell";
+import {
+	trackTransferBatchData,
+	trackTransferData,
+} from "./utils/trackTokenTransfers";
+import { trackBidData } from "./utils/trackBidData";
 
-
-// import {
-// 	trackBurnData,
-// 	trackUniqueMintData,
-// 	trackTokenSeriesData,
-// 	trackAdditionalTokenData,
-// 	trackSellData,
-// 	trackSeriesNameData,
-// 	trackTransferData,
-// 	trackTransferBatchData,
-// 	trackBurnBatchData,
-// 	trackSellBundleData,
-// 	trackBuyData,
-// 	trackAuctionData,
-// 	trackAuctionBundleData,
-// 	trackCancelSaleData,
-// 	trackBidData,
-// 	processAuctionSoldEvent,
-// } from "./utils";
 import { Api } from "@cennznet/api";
 import { config } from "dotenv";
 import logger from "../logger";
 import { Vec } from "@polkadot/types-codec";
-import {u8aToString} from "@polkadot/util";
+import { u8aToString } from "@polkadot/util";
 
 config();
 export let supportedAssets = [];
@@ -92,52 +84,61 @@ async function processNFTExtrinsicData({
 	const eventData = findNFTEvent ? findNFTEvent.event.data.toJSON() : null;
 	switch (method) {
 		case "mintUnique": {
-			if (eventData) {
-				await trackUniqueMintData(
-					eventData,
-					api,
-					params,
-					date,
-					owner,
-					txHash,
-					blockNumber
+			if (!eventData) {
+				logger.error(
+					`Something wrong, no event found for mintUnique extrinsic at blockNumber ${blockNumber}`
 				);
-			} else {
-				logger.error("Something wrong, no event found");
+				break;
 			}
+
+			await trackUniqueMintData(
+				eventData,
+				api,
+				params,
+				date,
+				owner,
+				txHash,
+				blockNumber
+			);
 			break;
 		}
 		case "mintSeries": {
-			if (eventData) {
-				await trackTokenSeriesData(
-					eventData,
-					api,
-					params,
-					date,
-					owner,
-					txHash,
-					blockNumber
+			if (!eventData) {
+				logger.error(
+					`Something wrong, no event found for mint series extrinsic at blockNumber ${blockNumber}`
 				);
-			} else {
-				logger.error("Something wrong, no event found");
+				break;
 			}
+
+			await trackTokenSeriesData(
+				eventData,
+				api,
+				params,
+				date,
+				owner,
+				txHash,
+				blockNumber
+			);
 			break;
 		}
 		case "mintAdditional": {
-			if (eventData) {
-				await trackAdditionalTokenData(
-					params,
-					eventData,
-					api,
-					blockHash,
-					date,
-					owner,
-					txHash,
-					blockNumber
+			if (!eventData) {
+				logger.error(
+					`Something wrong, no event found for mintAdditional extrinsic at blockNumber ${blockNumber}`
 				);
-			} else {
-				logger.error("Something wrong, no event found");
+				break;
 			}
+
+			await trackAdditionalTokenData(
+				params,
+				eventData,
+				api,
+				blockHash,
+				date,
+				owner,
+				txHash,
+				blockNumber
+			);
 			break;
 		}
 		case "setSeriesName": {
@@ -171,35 +172,41 @@ async function processNFTExtrinsicData({
 		}
 
 		case "sellBundle": {
-			if (eventData) {
-				await trackSellBundleData(
-					params,
-					api,
-					eventData,
-					txHash,
-					date,
-					owner,
-					blockNumber
+			if (!eventData) {
+				logger.error(
+					`Something wrong, no event found for sell bundle extrinsic at blockNumber ${blockNumber}`
 				);
-			} else {
-				logger.error("Something wrong, no event found");
+				break;
 			}
+
+			await trackSellBundleData(
+				params,
+				api,
+				eventData,
+				txHash,
+				date,
+				owner,
+				blockNumber
+			);
 			break;
 		}
 		case "sell": {
-			if (eventData) {
-				await trackSellData(
-					params,
-					api,
-					eventData,
-					txHash,
-					date,
-					owner,
-					blockNumber
+			if (!eventData) {
+				logger.error(
+					`Something wrong, no event found for sell extrinsic at blockNumber ${blockNumber}`
 				);
-			} else {
-				logger.error("Something wrong, no event found");
+				break;
 			}
+
+			await trackSellData(
+				params,
+				api,
+				eventData,
+				txHash,
+				date,
+				owner,
+				blockNumber
+			);
 			break;
 		}
 
@@ -216,35 +223,41 @@ async function processNFTExtrinsicData({
 			break;
 		}
 		case "auction": {
-			if (eventData) {
-				await trackAuctionData(
-					eventData,
-					params,
-					api,
-					txHash,
-					date,
-					owner,
-					blockNumber
+			if (!eventData) {
+				logger.error(
+					`Something wrong, no event found for auction extrinsic at blockNumber ${blockNumber}`
 				);
-			} else {
-				logger.error("Something wrong, no event found");
+				break;
 			}
+			await trackAuctionData(
+				eventData,
+				params,
+				api,
+				txHash,
+				date,
+				owner,
+				blockNumber
+			);
+
 			break;
 		}
 		case "auctionBundle": {
-			if (eventData) {
-				await trackAuctionBundleData(
-					eventData,
-					params,
-					api,
-					txHash,
-					date,
-					owner,
-					blockNumber
+			if (!eventData) {
+				logger.error(
+					`Something wrong, no event found for auction bundle extrinsic at blockNumber ${blockNumber}`
 				);
-			} else {
-				logger.error("Something wrong, no event found");
+				break;
 			}
+			await trackAuctionBundleData(
+				eventData,
+				params,
+				api,
+				txHash,
+				date,
+				owner,
+				blockNumber
+			);
+
 			break;
 		}
 
@@ -291,7 +304,6 @@ async function fetchSupportedAssets(api) {
 	});
 	supportedAssets = assetInfo;
 }
-
 
 async function main(networkName) {
 	networkName = networkName || "azalea";
