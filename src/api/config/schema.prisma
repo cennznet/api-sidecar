@@ -1,0 +1,18 @@
+datasource db {
+  url      = env("DATABASE_URL")
+  provider = "mysql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model EventTracker {
+  id        Int      @id @default(autoincrement())
+  streamId  String
+  type      Int
+  version   BigInt
+  data      Json
+  signer    String?
+  @@unique([streamId, version])
+}

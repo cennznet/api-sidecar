@@ -27,6 +27,7 @@
     "mongoose": "^6.0.9",
     "winston": "^3.2.1",
     "prettier": "^2.5.1",
+    "@prisma/client": "^3.11.0",
     "ts-node": "^10.7.0",
     "tslib": "^2.3.1",
     "tslog": "^3.3.2",
@@ -36,6 +37,7 @@
     "mysql2": "^2.3.3",
     "@types/eslint": "^8",
     "@types/node": "^17.0.21",
-    "@types/prettier": "^2"
+    "@types/prettier": "^2",
+    "prisma": "^3.11.0"
   }
 }

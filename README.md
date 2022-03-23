@@ -16,7 +16,7 @@ curl localhost:3000/nftWallet/5FWizEtxJTb2wPjWEqtEDetYTjgmWRmUNvRpMBh6ZDX4JJCt
 
 # Run NFT Data
 1. run docker-compose up to start mysql service, 
-2. run script.sql
+2. run npx prisma db push  --schema=./src/api/config/schema.prisma (will create table EventTracker)
 3. run redis-server to start redis service
 4. run yarn nft:finalizationHead
 5. run yarn nft:stats
