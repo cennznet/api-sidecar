@@ -1,6 +1,7 @@
 // track burn related data
 import { trackEventData, trackEventDataSet } from "../dbOperations";
 import { Params } from "./commonUtils";
+import logger from "../../logger";
 
 export async function trackBurnData(
 	params: Params,
@@ -27,9 +28,9 @@ export async function trackBurnData(
 			JSON.stringify(tokenData),
 			owner
 		);
-		console.log("Burn done");
+		logger.info("Burn done");
 	} catch (e) {
-		console.log(
+		logger.error(
 			`Error tracking token burn data with params ${JSON.stringify(
 				params
 			)}, error ${e}`
@@ -64,9 +65,9 @@ export async function trackBurnBatchData(
 		});
 		await trackEventDataSet(tokens);
 
-		console.log("burn batch done..");
+		logger.info("burn batch done..");
 	} catch (e) {
-		console.log(
+		logger.error(
 			`Error tracking token burn batch data with params ${JSON.stringify(
 				params
 			)}, error ${e}`

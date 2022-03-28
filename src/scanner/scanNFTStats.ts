@@ -287,7 +287,7 @@ async function getBlockInfoFromRedis(redisClient) {
 		const finalizedBlock = (await redisClient.get("finalizedBlock")) || "0";
 		return [parseInt(processedBlock), parseInt(finalizedBlock)];
 	} catch (e) {
-		console.log("error in get redis block info:", e);
+		logger.info(`error in get redis block info:${e}`);
 	}
 }
 
@@ -318,8 +318,8 @@ async function main(networkName) {
 		const [processedBlock, finalizedBlock] = await getBlockInfoFromRedis(
 			redisClient
 		);
-		console.log("processedBlock::", processedBlock);
-		console.log("finalizedBlock:", finalizedBlock);
+		logger.info(`processedBlock::${processedBlock}`);
+		logger.info(`finalizedBlock:${finalizedBlock}`);
 		for (let i = processedBlock + 1; i <= finalizedBlock; i++) {
 			const blockNumber = i;
 			logger.info(`HEALTH CHECK => OK`);
@@ -342,7 +342,6 @@ async function main(networkName) {
 							const blockTimestamp = getTimestamp(block.block, api);
 							const txHash = e.hash.toString();
 							const owner = e.signer.toString();
-							console.log("tx hash:", txHash);
 							const { method } = call;
 							await processNFTExtrinsicData({
 								method,

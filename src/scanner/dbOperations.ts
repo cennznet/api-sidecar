@@ -18,7 +18,6 @@ export async function trackEventData(streamId, type, version, data, signer) {
 
 export async function trackEventDataSet(tokens) {
 	const data = tokens.map((token) => {
-		console.log("Token:", token);
 		return {
 			streamId: token[0].toString(),
 			type: token[1],
@@ -31,5 +30,4 @@ export async function trackEventDataSet(tokens) {
 		data: data,
 		skipDuplicates: true,
 	});
-	console.log("create many:", createMany);
 }

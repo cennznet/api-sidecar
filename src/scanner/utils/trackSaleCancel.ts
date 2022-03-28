@@ -3,6 +3,7 @@ import { accuracyFormat } from "../formatBalance";
 import { extractTokenListingData, Params } from "./commonUtils";
 import { Api } from "@cennznet/api";
 import { Listing, Option } from "@cennznet/types";
+import logger from "../../logger";
 
 export async function trackCancelSaleData(
 	params: Params[],
@@ -73,9 +74,9 @@ export async function trackCancelSaleData(
 			tokenData,
 			owner
 		);
-		console.log("cancelSale done");
+		logger.info("cancelSale done");
 	} catch (e) {
-		console.log(
+		logger.error(
 			`Error tracking sale cancel data with params ${JSON.stringify(
 				params
 			)}, error ${e}`

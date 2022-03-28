@@ -3,6 +3,7 @@ import { accuracyFormat } from "../formatBalance";
 import { extractTokenListingData, Params } from "./commonUtils";
 import { Api } from "@cennznet/api";
 import { Listing, Option } from "@cennznet/types";
+import logger from "../../logger";
 
 export async function trackBuyData(
 	params: Params,
@@ -15,8 +16,8 @@ export async function trackBuyData(
 ) {
 	try {
 		const listingId = params[0].value;
-		console.log("listingId::", listingId);
-		console.log("blockHash:", blockHash.toString());
+		logger.info(`listingId::${listingId}`);
+		logger.info(`blockHash:${blockHash.toString()}`);
 		const blockHashBeforeBuy = (
 			await api.rpc.chain.getBlockHash(blockNumber - 1)
 		).toString();
@@ -27,7 +28,7 @@ export async function trackBuyData(
 			)) as Option<Listing>
 		).unwrapOrDefault();
 		const details = listingDetail.asFixedPrice.toJSON();
-		console.log("details::", details);
+		logger.info(`details::${details}`);
 		const fixedPrice = accuracyFormat(details.fixedPrice, details.paymentAsset);
 		const dataInserts = [];
 		const listingData = {
@@ -69,9 +70,9 @@ export async function trackBuyData(
 			tokenData,
 			owner
 		);
-		console.log("Buy done");
+		logger.info("Buy done");
 	} catch (e) {
-		console.log(
+		logger.error(
 			`Error tracking buy listing data with params ${JSON.stringify(
 				params
 			)}, error ${e}`

@@ -1,6 +1,7 @@
 // Track transfers
 import { trackEventData, trackEventDataSet } from "../dbOperations";
 import { Params } from "@/src/scanner/utils/commonUtils";
+import logger from "../../logger";
 
 export async function trackTransferData(
 	params: Params,
@@ -28,8 +29,9 @@ export async function trackTransferData(
 			JSON.stringify(tokenData),
 			owner
 		);
+		logger.info("Transfer NFT done");
 	} catch (e) {
-		console.log(
+		logger.error(
 			`Error tracking token transfer with params ${JSON.stringify(
 				params
 			)}, error ${e}`
@@ -83,8 +85,9 @@ export async function trackTransferBatchData(
 			]);
 		});
 		await trackEventDataSet(tokens);
+		logger.info("Batch transfer NFT done");
 	} catch (e) {
-		console.log(
+		logger.error(
 			`Error tracking transfer batch data with params ${JSON.stringify(
 				params
 			)}, error ${e}`

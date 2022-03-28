@@ -8,6 +8,7 @@ import {
 import { trackEventDataSet } from "../dbOperations";
 import { Api } from "@cennznet/api";
 import { Listing, Option, Balance } from "@cennznet/types";
+import logger from "../../logger";
 
 export async function trackAuctionData(
 	eventData: number[],
@@ -64,9 +65,9 @@ export async function trackAuctionData(
 			tokenData,
 			owner
 		);
-		console.log("Auction done");
+		logger.info("Auction done");
 	} catch (e) {
-		console.log(
+		logger.error(
 			`Error tracking auction data with params ${JSON.stringify(
 				params
 			)}, error ${e}`
@@ -142,9 +143,9 @@ export async function trackAuctionBundleData(
 			tokenData,
 			owner
 		);
-		console.log("Bundle Auction done");
+		logger.info("Bundle Auction done");
 	} catch (e) {
-		console.log(
+		logger.error(
 			`Error tracking auction bundle data with params ${JSON.stringify(
 				params
 			)}, error ${e}`
@@ -238,9 +239,9 @@ export async function processAuctionSoldEvent(
 			tokenData,
 			null
 		);
-		console.log("Auction completed");
+		logger.info("Auction completed");
 	} catch (e) {
-		console.log(
+		logger.error(
 			`Error tracking auction sold data with params ${(
 				event as any
 			).toJSON()}, error ${e}`

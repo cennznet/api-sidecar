@@ -2,6 +2,7 @@
 import { accuracyFormat } from "../formatBalance";
 import { convertBlockToDate, extractListingData, Params } from "./commonUtils";
 import { Api } from "@cennznet/api";
+import logger from "../../logger";
 
 export async function trackSellBundleData(
 	params: Params,
@@ -23,7 +24,6 @@ export async function trackSellBundleData(
 		const duration = params[4].value;
 		const marketPlaceId = params[5] ? params[5].value : null;
 		const listingId = eventData[1];
-		console.log("fixed Price::", fixedPrice);
 		const tokenData = {
 			eventData: {
 				type: "Fixed",
@@ -36,8 +36,7 @@ export async function trackSellBundleData(
 			},
 			eventType: "LISTING_STARTED",
 		};
-		console.log("tokenData:", tokenData);
-		console.log("data::", date);
+
 		const closeDate = await convertBlockToDate(
 			api,
 			duration + blockNumber,
@@ -58,7 +57,7 @@ export async function trackSellBundleData(
 			},
 			eventType: "LISTING_STARTED",
 		};
-		console.log("listingData:", listingData);
+
 
 		await extractListingData(
 			tokenIds,
@@ -68,8 +67,9 @@ export async function trackSellBundleData(
 			listingId,
 			listingData
 		);
+		logger.info('Sell bundle data done');
 	} catch (e) {
-		console.log(
+		logger.error(
 			`Error tracking sell bundle data with params ${JSON.stringify(
 				params
 			)}, error ${e}`
@@ -115,7 +115,6 @@ export async function trackSellData(
 			duration + blockNumber,
 			date
 		);
-		console.log("date in sell:", duration + blockNumber);
 		const listingData = {
 			eventData: {
 				type: "Fixed",
@@ -139,8 +138,9 @@ export async function trackSellData(
 			listingId,
 			listingData
 		);
+		logger.info('Sell data done');
 	} catch (e) {
-		console.log(
+		logger.error(
 			`Error tracking sell data with params ${JSON.stringify(
 				params
 			)}, error ${e}`

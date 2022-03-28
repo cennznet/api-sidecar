@@ -34,7 +34,6 @@ export async function getTokenDetails(
 	const nftData: EventTracker[] = (await fetchEventStream(
 		tokenId
 	)) as unknown as EventTracker[];
-	// console.log('data::',nftData);
 	if (!nftData || nftData.length === 0)
 		return reply.status(500).send({ error: "Token Not found!" });
 	let imgUrl = "",
@@ -116,7 +115,6 @@ export async function getListingDetails(
 	if (!data || data.length === 0)
 		return reply.status(500).send({ error: "Token Not found!" });
 	const listingData = data as EventTracker[];
-	// console.log("listingData:", listingData);
 	let date = "N/A",
 		type = "N/A",
 		closeDate = "N/A",

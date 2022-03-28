@@ -3,6 +3,7 @@ import { accuracyFormat } from "../formatBalance";
 import { extractTokenListingData, Params } from "./commonUtils";
 import { Api } from "@cennznet/api";
 import { Balance, Listing, Option } from "@cennznet/types";
+import logger from "../../logger";
 
 export async function trackBidData(
 	params: Params[],
@@ -24,7 +25,6 @@ export async function trackBidData(
 			(await api.query.nft.listings.at(blockHash, listingId)) as Option<Listing>
 		).unwrapOrDefault();
 		const details = listingDetail.asAuction.toJSON();
-		console.log("details::", details);
 		const amount = accuracyFormat(amountRaw, details.paymentAsset);
 		const dataInserts = [];
 		const listingData = {
@@ -59,9 +59,9 @@ export async function trackBidData(
 			tokenData,
 			owner
 		);
-		console.log("Bid done");
+		logger.info("Bid done");
 	} catch (e) {
-		console.log(
+		logger.error(
 			`Error tracking token bid data with params ${JSON.stringify(
 				params
 			)}, error ${e}`

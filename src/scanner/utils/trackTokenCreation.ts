@@ -3,6 +3,7 @@ import { trackEventData, trackEventDataSet } from "../dbOperations";
 import { Api } from "@cennznet/api";
 import { Params } from "./commonUtils";
 import { u128 } from "@cennznet/types";
+import logger from "../../logger";
 
 export async function trackUniqueMintData(
 	eventData: number[],
@@ -35,8 +36,9 @@ export async function trackUniqueMintData(
 			JSON.stringify(tokenData),
 			owner
 		);
+		logger.info('Unique mint completed');
 	} catch (e) {
-		console.log(
+		logger.error(
 			`Error tracking unique mint data with params ${JSON.stringify(
 				params
 			)}, error ${e}`
@@ -81,8 +83,9 @@ export async function trackTokenSeriesData(
 			tokenData,
 			owner
 		);
+		logger.info('Token series completed');
 	} catch (e) {
-		console.log(
+		logger.error(
 			`Error tracking token series data with params ${JSON.stringify(
 				params
 			)}, error ${e}`
@@ -141,8 +144,9 @@ export async function trackAdditionalTokenData(
 			tokenData,
 			owner
 		);
+		logger.info('Additional tokens completed');
 	} catch (e) {
-		console.log(
+		logger.error(
 			`Error tracking additional series data with params ${JSON.stringify(
 				params
 			)}, error ${e}`

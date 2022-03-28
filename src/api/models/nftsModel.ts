@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import logger from "../../logger";
 
 const prisma = new PrismaClient();
 export async function fetchEventStream(tokenId) {
@@ -11,10 +12,9 @@ export async function fetchEventStream(tokenId) {
 				version: "asc",
 			},
 		});
-		console.log("eventStream::", eventStream);
 		return eventStream;
 	} catch (err) {
-		console.error(err);
+		logger.error(err);
 		return [];
 	}
 }
@@ -30,9 +30,9 @@ export async function fetchUsersNFTEvent(address) {
 				version: "asc",
 			},
 		});
-		console.log("eventStream::", eventStream);
 		return eventStream;
 	} catch (err) {
-		return false;
+		logger.error(err);
+		return [];
 	}
 }

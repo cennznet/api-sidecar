@@ -3,6 +3,7 @@ import { Params } from "./commonUtils";
 import { Api } from "@cennznet/api";
 import { u128 } from "@cennznet/types";
 import { extractTokenList } from "./trackTokenCreation";
+import logger from "../../logger";
 
 export async function trackSeriesNameData(
 	params: Params,
@@ -46,8 +47,9 @@ export async function trackSeriesNameData(
 			tokenData,
 			owner
 		);
+		logger.info('Series name updated');
 	} catch (e) {
-		console.log(
+		logger.error(
 			`Error tracking token series name with params ${JSON.stringify(
 				params
 			)}, error ${e}`

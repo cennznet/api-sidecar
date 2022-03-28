@@ -68,6 +68,5 @@ export async function extractListingData(
 		JSON.stringify(listingData),
 		owner,
 	]);
-	console.log("tokens::", tokens);
 	await trackEventDataSet(tokens);
 }
