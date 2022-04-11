@@ -309,11 +309,13 @@ async function main(networkName) {
 	networkName = networkName || "azalea";
 
 	const api = await Api.create({ provider: process.env.provider });
+	const currentRuntimeVersion = await api.rpc.state.getRuntimeVersion();
 	await fetchSupportedAssets(api);
 	const redisClient = createClient();
 	await redisClient.connect();
 	// await redisClient.set('processedBlock', '11408530');
 	logger.info(`Connect to cennznet network ${networkName}`);
+	let apiAt;
 	while (true) {
 		const [processedBlock, finalizedBlock] = await getBlockInfoFromRedis(
 			redisClient
@@ -325,14 +327,21 @@ async function main(networkName) {
 			logger.info(`HEALTH CHECK => OK`);
 			logger.info(`At blocknumber: ${blockNumber}`);
 			const blockHash = await api.rpc.chain.getBlockHash(blockNumber);
+			console.log('blockHash:',blockHash.toString());
 			const block = await api.rpc.chain.getBlock(blockHash);
 			const allEvents = await api.query.system.events.at(blockHash);
 			const extrinsics = block.block.extrinsics;
+			const runtimeVersionAtBlockHash = await api.rpc.state.getRuntimeVersion(blockHash);
+
+			if (runtimeVersionAtBlockHash.specVersion.toNumber() < currentRuntimeVersion.specVersion.toNumber()) {
+				apiAt = await api.at(blockHash);
+			}
 
 			await Promise.all(
 				extrinsics.map(async (e, index) => {
 					const params = getExtrinsicParams(e);
-					const call = api.findCall(e.callIndex);
+					let call= apiAt ? apiAt.findCall(e.callIndex): api.findCall(e.callIndex);
+
 					if (call.section === "nft") {
 						const extrinsicRelatedEvents = filterExtrinsicEvents(
 							index,

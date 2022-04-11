@@ -16,12 +16,12 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
-"@cennznet/api@2.1.0-alpha.2":
-  version "2.1.0-alpha.2"
-  resolved "https://registry.yarnpkg.com/@cennznet/api/-/api-2.1.0-alpha.2.tgz#383c097ec2836a90d05a2367c771b51022781c61"
-  integrity sha512-y4los9l3QojNmUlKrytEzlbhVJ2sit9hgBn+dq/qX3wcSOSzziDsgPoZ4sQcrcOUDEYZo2LPD7kQPu0qqgQKIQ==
+"@cennznet/api@2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@cennznet/api/-/api-2.1.0.tgz#3a186a52da6f9125e5b135a45367af413a1d66ca"
+  integrity sha512-yTPUc6k9Jis9wooBoCKzTyNC9B8TQ3fNM4aPesRs054qjBRkk+mYYMBj8h6OsBGClXXOq2LuUVog5H37l0kgBQ==
   dependencies:
-    "@cennznet/types" "^2.1.0-alpha.2"
+    "@cennznet/types" "^2.1.0"
     "@ethersproject/keccak256" "^5.5.0"
     "@ethersproject/signing-key" "^5.5.0"
     "@polkadot/api" "^7.7.1"
@@ -32,10 +32,10 @@
     "@polkadot/x-rxjs" "^6.11.2-6"
     eventemitter3 "^4.0.0"
 
-"@cennznet/types@^2.1.0-alpha.2":
-  version "2.1.0-alpha.2"
-  resolved "https://registry.yarnpkg.com/@cennznet/types/-/types-2.1.0-alpha.2.tgz#0e6a365d34c1e573dac7cd0c215c623d12d1674e"
-  integrity sha512-BNhlgsqNkUScHD+Anx5qr3PuiiCsaGAo+orS0aohPc6NdutEvJeUXDIyDlKQHX1w1aK3kRmlqH94g5TRK58yLg==
+"@cennznet/types@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@cennznet/types/-/types-2.1.0.tgz#5f2e26ec8ef14c9e0b326fe87e9acf1477c2aa42"
+  integrity sha512-yIlm9JPh4cd8dicSjtYrwRoYmQV9mzy6RPwyI/Z5P9LiRktjOIlX90dfuQ9VvFHF/ruRKzEopiYD3n3zcHWkBg==
   dependencies:
     "@polkadot/keyring" "^8.3.3"
     "@polkadot/types" "^7.7.1"
