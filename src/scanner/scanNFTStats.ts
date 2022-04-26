@@ -1,5 +1,5 @@
-import { createClient } from "redis";
-import { EventRecord } from "@polkadot/types/interfaces";
+import {createClient, RedisDefaultModules} from "redis";
+import {EventRecord, RuntimeVersion} from "@polkadot/types/interfaces";
 import { trackCancelSaleData } from "./utils/trackSaleCancel";
 import {
 	trackAuctionData,
@@ -20,15 +20,20 @@ import {
 	trackTransferData,
 } from "./utils/trackTokenTransfers";
 import { trackBidData } from "./utils/trackBidData";
-
+// import {Singleton} from "./ApiService";
 import { Api } from "@cennznet/api";
 import { config } from "dotenv";
 import logger from "../logger";
 import { Vec } from "@polkadot/types-codec";
 import { u8aToString } from "@polkadot/util";
+//import workerpool from 'workerpool';
+import * as workerpool from 'workerpool';
+import { OverrideBundleType } from "@polkadot/types/types";
 
 config();
 export let supportedAssets = [];
+let api;
+//const redisClient = createClient();
 
 // find the event for the extrinsic
 function filterExtrinsicEvents(extrinsicIdx, events) {
@@ -283,6 +288,9 @@ async function processNFTExtrinsicData({
 
 async function getBlockInfoFromRedis(redisClient) {
 	try {
+
+		// await redisClient.set('processedBlock', '1426148');
+		// return [2000, 3000];
 		const processedBlock = (await redisClient.get("processedBlock")) || "0";
 		const finalizedBlock = (await redisClient.get("finalizedBlock")) || "0";
 		return [parseInt(processedBlock), parseInt(finalizedBlock)];
@@ -291,104 +299,82 @@ async function getBlockInfoFromRedis(redisClient) {
 	}
 }
 
-async function fetchSupportedAssets(api) {
-	const assets = await api.rpc.genericAsset.registeredAssets();
 
-	const assetInfo = assets.map((asset) => {
-		const [tokenId, { symbol, decimalPlaces }] = asset;
-		return {
-			id: tokenId.toString(),
-			symbol: u8aToString(symbol),
-			decimals: decimalPlaces.toNumber(),
-		};
-	});
-	supportedAssets = assetInfo;
-}
 
-async function main(networkName) {
-	networkName = networkName || "azalea";
-
-	const api = await Api.create({ provider: process.env.provider });
-	const currentRuntimeVersion = await api.rpc.state.getRuntimeVersion();
-	await fetchSupportedAssets(api);
-	const redisClient = createClient();
-	await redisClient.connect();
-	// await redisClient.set('processedBlock', '11408530');
-	logger.info(`Connect to cennznet network ${networkName}`);
-	let apiAt;
-	while (true) {
-		const [processedBlock, finalizedBlock] = await getBlockInfoFromRedis(
-			redisClient
-		);
-		logger.info(`processedBlock::${processedBlock}`);
-		logger.info(`finalizedBlock:${finalizedBlock}`);
-		for (let i = processedBlock + 1; i <= finalizedBlock; i++) {
-			const blockNumber = i;
-			logger.info(`HEALTH CHECK => OK`);
-			logger.info(`At blocknumber: ${blockNumber}`);
-			const blockHash = await api.rpc.chain.getBlockHash(blockNumber);
-			console.log('blockHash:',blockHash.toString());
-			const block = await api.rpc.chain.getBlock(blockHash);
-			const allEvents = await api.query.system.events.at(blockHash);
-			const extrinsics = block.block.extrinsics;
-			const runtimeVersionAtBlockHash = await api.rpc.state.getRuntimeVersion(blockHash);
-
-			if (runtimeVersionAtBlockHash.specVersion.toNumber() < currentRuntimeVersion.specVersion.toNumber()) {
-				apiAt = await api.at(blockHash);
-			}
-
-			await Promise.all(
-				extrinsics.map(async (e, index) => {
-					const params = getExtrinsicParams(e);
-					let call= apiAt ? apiAt.findCall(e.callIndex): api.findCall(e.callIndex);
-
-					if (call.section === "nft") {
-						const extrinsicRelatedEvents = filterExtrinsicEvents(
-							index,
-							allEvents
-						);
-						if (isExtrinsicSuccessful(index, extrinsicRelatedEvents)) {
-							const blockTimestamp = getTimestamp(block.block, api);
-							const txHash = e.hash.toString();
-							const owner = e.signer.toString();
-							const { method } = call;
-							await processNFTExtrinsicData({
-								method,
-								params,
-								events: extrinsicRelatedEvents,
-								txHash,
-								blockTimestamp,
-								api,
-								owner,
-								blockNumber,
-								blockHash,
-							});
-						}
-					}
-				})
-			);
-			const auctionSoldEvent = (allEvents as unknown as Vec<EventRecord>).find(
-				({ event }) => event.section === "nft" && event.method === "AuctionSold"
-			);
-			if (auctionSoldEvent) {
-				const blockTimestamp = getTimestamp(block.block, api);
-				await processAuctionSoldEvent(
-					auctionSoldEvent.event,
-					blockTimestamp,
-					blockNumber,
-					blockHash.toString(),
-					api
-				);
-			}
-			await redisClient.set("processedBlock", blockNumber.toString());
+const redisClient = createClient();
+async function main () {
+	try {
+		//const redisClient = createClient();
+		const pool = workerpool.pool(__dirname + '/worker.js', {maxQueueSize: 5, maxWorker: 5, workerType: 'thread'});
+		if (!redisClient.isOpen) {
+			await redisClient.connect();
 		}
-		await sleep(5000);
+		const [currentProcessedBlock, latestFinalizedBlock] = await getBlockInfoFromRedis(redisClient);
+		while (currentProcessedBlock <= latestFinalizedBlock) {
+		const processedBlockStr = (await redisClient.get("processedBlock")) || "0";
+		const processedBlock = parseInt(processedBlockStr);
+		// console.log('processedBlock::', processedBlock);
+		// console.log('latestFinalizedBlock:', latestFinalizedBlock);
+		const batchSize = 100;
+		let targetNumber = Math.min(
+			processedBlock + batchSize,
+			latestFinalizedBlock,
+		);
+		const blocksToScan = targetNumber - processedBlock;
+		const totalBatches = blocksToScan < 10 ? blocksToScan : 5;
+		const startBlock = processedBlock;
+		const chunk = Math.floor(blocksToScan / totalBatches);
+		let indexMap = [];
+		for (let batchStart = 1; batchStart <= totalBatches; batchStart++) {
+			const startIndex = startBlock + (chunk * (batchStart - 1)) + 1;
+			const lastBatch = batchStart === totalBatches;
+			const endIndex = lastBatch ? targetNumber : startIndex + (chunk - 1);
+			indexMap.push({startIndex, endIndex});
+		}
+		console.log('indexMap::', indexMap);
+		console.log('pool.stats:', pool.stats());
+		try {
+			await Promise.all(indexMap.map(async (index) => {
+				try {
+					await pool.exec('trackNFTFromChunk', [index]);
+					console.log('pool.stats:', pool.stats());
+					console.log(`Done: ${JSON.stringify(index)}`);
+				} catch (e) {
+					console.error(`Error: ${JSON.stringify(index)}`);
+					//throw e;
+				}
+
+			}));
+			//	pool.terminate();
+			//	console.log('pool.stats:',pool.stats());
+			console.log('Done with all promises...');
+			console.log('pool.stats:', pool.stats());
+			// Terminate gracefully
+			//await pool.terminate();
+			console.log("***** Pool terminated gracefully *****");
+			const block = parseInt(await redisClient.get("processedBlock"));
+			console.log('current processed block in redis::', block);
+			if (block < targetNumber) {
+				await redisClient.set("processedBlock", targetNumber.toString());
+			}
+			//process.exit();
+		} catch (e) {
+			console.error('Global error');
+			// Force terminate the pool (no need to continue after an error)
+			await pool.terminate(true);
+			throw e;
+		}
+		}
+	} catch (e) {
+		console.log('err::',e);
 	}
 }
+
+
+
 
 function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const networkName = process.env.NETWORK;
-main(networkName).catch((err) => console.log(err));
+main().catch((err) => console.log(err));
