@@ -16,12 +16,12 @@
     "nft:finalizationHead": "ts-node src/scanner/trackfinalizeHead.ts"
   },
   "dependencies": {
-    "csv-writer": "^1.6.0",
     "@cennznet/api": "2.1.0",
     "@prisma/client": "^3.11.0",
     "@tsconfig/node16": "^1.0.2",
     "axios": "^0.26.1",
     "bignumber.js": "^9.0.0",
+    "csv-writer": "^1.6.0",
     "dotenv": "^8.2.0",
     "fastify": "^3.22.0",
     "fastify-mongodb": "^4.1.0",
@@ -30,6 +30,7 @@
     "mongoose": "^6.0.9",
     "prettier": "^2.5.1",
     "redis": "^4.0.4",
+    "request": "^2.88.2",
     "ts-node": "^10.7.0",
     "tslib": "^2.3.1",
     "tslog": "^3.3.2",
