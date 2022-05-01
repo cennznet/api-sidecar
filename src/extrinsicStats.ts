@@ -81,7 +81,6 @@ async function main(startDate, endDate, fileName) {
 		],
 		erc20Peg: ["depositClaim", "withdraw"],
 	};
-	//const sections = ["genericAsset"];
 	const csvArray = [];
 	while (start <= end) {
 		const dateTimeInParts = start.toISOString().split("T");
@@ -164,7 +163,7 @@ async function main(startDate, endDate, fileName) {
 		successfulExts: sects.map(section => sectionAggregation[section].successfulExt),
 		failedExts: sects.map(section => sectionAggregation[section].failedExt)
 	}
-	await createSectionsGraph(sectionsChartData);
+	await createSectionsGraph(sectionsChartData, fileName);
 	const sectionMethodsGraphDatas: SectionMethodsChartData[] = sects.map(section => {
 		const methods = Object.keys(sectionAggregation[section]).filter(method => method !== "successfulExt" && method !== "failedExt");
 		const successfulExts = methods.map(method => sectionAggregation[section][method].successfulExt );
@@ -176,7 +175,7 @@ async function main(startDate, endDate, fileName) {
 			successfulExts
 		}
 	});
-	const createSectionsGraphProms = sectionMethodsGraphDatas.map(async chartData => {return await createSectionMethodsGraph(chartData);});
+	const createSectionsGraphProms = sectionMethodsGraphDatas.map(async chartData => {return await createSectionMethodsGraph(chartData, fileName);});
 	await Promise.all(createSectionsGraphProms);
 	csv
 		.writeRecords(
@@ -190,8 +189,9 @@ async function main(startDate, endDate, fileName) {
 		});
 }
 
-const createSectionMethodsGraph = (sectionMethodsData: SectionMethodsChartData) => {
+const createSectionMethodsGraph = (sectionMethodsData: SectionMethodsChartData, chartTitle:string) => {
 	const quickChartURL = 'https://quickchart.io/chart/create';
+	const totalTransactionCount = sectionMethodsData.successfulExts.reduce((a, b) => a + b, 0) + sectionMethodsData.failedExts.reduce((a, b) => a + b, 0);
 	const post_data = {
 		chart: {
 			type: 'bar',
@@ -213,7 +213,7 @@ const createSectionMethodsGraph = (sectionMethodsData: SectionMethodsChartData) 
 			options: {
 				title: {
 					display: true,
-					text: `CENNZnet ${sectionMethodsData.section} Module Transactions November`,
+					text: `CENNZnet ${sectionMethodsData.section} Module Transactions ${chartTitle}\n\t ${totalTransactionCount} Total Transactions`,
 				},
 				scales: {
 					xAxes: [
@@ -233,11 +233,11 @@ const createSectionMethodsGraph = (sectionMethodsData: SectionMethodsChartData) 
 	const createChartProm = new Promise((resolve, reject) => {
 		request.get({ url: quickChartURL, method: "POST", json: true, body: post_data }, function (error, response, body) {
 			if (!error) {
-				const filePath = "src/charts/"
+				const filePath = "charts/"
 				if (!fs.existsSync(filePath)){
 					fs.mkdirSync(filePath);
 				}
-				request(body['url']).pipe(fs.createWriteStream(`${sectionMethodsData.section}.png`)).on('close', () => {
+				request(body['url']).pipe(fs.createWriteStream(`${filePath}/${sectionMethodsData.section}_${chartTitle}.png`)).on('close', () => {
 					resolve(body['url']);
 				});
 			} else {
@@ -256,8 +256,9 @@ const createSectionMethodsGraph = (sectionMethodsData: SectionMethodsChartData) 
 	return true;
 }
 
-const createSectionsGraph = (sectionsData: SectionsChartData) => {
-	const quickChartURL = 'https://quickchart.io/chart/create'
+const createSectionsGraph = (sectionsData: SectionsChartData, chartTitle:string) => {
+	const quickChartURL = 'https://quickchart.io/chart/create';
+	const totalTransactionCount = sectionsData.successfulExts.reduce((a, b) => a + b, 0) + sectionsData.failedExts.reduce((a, b) => a + b, 0)
 	const post_data = {
 		chart: {
 			type: 'bar',
@@ -279,7 +280,7 @@ const createSectionsGraph = (sectionsData: SectionsChartData) => {
 			options: {
 				title: {
 					display: true,
-					text: 'CENNZnet Module Transactions November',
+					text: `CENNZnet Module Transactions ${chartTitle}\n\t ${totalTransactionCount} Total Transactions`,
 				},
 				scales: {
 					xAxes: [
@@ -299,11 +300,11 @@ const createSectionsGraph = (sectionsData: SectionsChartData) => {
 	const createChartProm = new Promise((resolve, reject) => {
 		request.get({ url: quickChartURL, method: "POST", json: true, body: post_data }, function (error, response, body) {
 			if (!error) {
-				const filePath = "src/charts/"
+				const filePath = "charts/"
 				if (!fs.existsSync(filePath)){
 					fs.mkdirSync(filePath);
 				}
-				request(body['url']).pipe(fs.createWriteStream("Test.png")).on('close', () => {
+				request(body['url']).pipe(fs.createWriteStream(`${filePath}/CENNZnet_module_${chartTitle}.png`)).on('close', () => {
 					resolve(body['url']);
 				});
 			} else {
