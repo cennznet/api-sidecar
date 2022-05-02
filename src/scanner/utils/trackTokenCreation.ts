@@ -20,18 +20,17 @@ export async function trackUniqueMintData(
 			.createType(params[3].type, params[3].value)
 			.toHuman();
 		const tokenData = {
-			eventData: {
 				imgUrl: imgUrl,
 				date: date,
 				owner: owner,
-				txHash: txHash,
-			},
-			eventType: "NFT_CREATED",
+				txHash: txHash
 		};
+		const eventType = "NFT_CREATED"
 		const type = 0;
 		await trackEventData(
 			tokenId,
 			type,
+			eventType,
 			blockNumber,
 			JSON.stringify(tokenData),
 			owner
@@ -50,28 +49,31 @@ export async function trackUniqueMintData(
 export async function trackTokenSeriesData(
 	eventData: number[],
 	api: Api,
-	params: Params,
+	params: Params[],
 	date: Date,
 	owner: string,
 	txHash: string,
 	blockNumber: number
 ) {
 	try {
+		// https://github.com/cennznet/cennznet/pull/535/files
+		// As per the changes, earlier for mint series single token event data at index 1 used to be array - https://uncoverexplorer.com/block/12047748
+		const checkIfSingleTokenInSeries = Array.isArray(eventData[1]);
 		const collectionId = eventData[0];
-		const seriesId = eventData[1];
-		const noOfTokens = eventData[2]; // quantity
+		const seriesId = checkIfSingleTokenInSeries ? eventData[1][1] : eventData[1];
+		const noOfTokens = checkIfSingleTokenInSeries ? 1 : eventData[2]; // quantity
+		const imageIndex = params.findIndex(p => p.name === 'metadataPath' || p.type === 'CrmlNftMetadataScheme' || p.type === 'MetadataScheme' || p.type === 'MetadataBaseURI') || 4;
+		// @ts-ignore
 		const imgUrl = api.registry
-			.createType(params[4].type, params[4].value)
+			.createType(params[imageIndex].type, params[imageIndex].value)
 			.toHuman();
 		const tokenData = {
-			eventData: {
 				imgUrl: imgUrl,
 				date: date,
 				owner: owner,
 				txHash: txHash,
-			},
-			eventType: "NFT_CREATED",
 		};
+		const eventType = "NFT_CREATED";
 		const type = 0; // nft token data
 		await extractTokenList(
 			0,
@@ -81,7 +83,8 @@ export async function trackTokenSeriesData(
 			type,
 			blockNumber,
 			tokenData,
-			owner
+			owner,
+			eventType
 		);
 		logger.info('Token series completed');
 	} catch (e) {
@@ -123,14 +126,12 @@ export async function trackAdditionalTokenData(
 		const imgUrl = _imgUrl.toHuman();
 
 		const tokenData = {
-			eventData: {
 				imgUrl: imgUrl,
 				date: date,
 				owner: owner,
 				txHash: txHash,
-			},
-			eventType: "NFT_CREATED",
 		};
+		const eventType = "NFT_CREATED";
 		const type = 0; // nft token data
 		const endIndex = nextSerialNumber + noOfTokens;
 		const startIndex = nextSerialNumber;
@@ -142,7 +143,8 @@ export async function trackAdditionalTokenData(
 			type,
 			blockNumber,
 			tokenData,
-			owner
+			owner,
+			eventType
 		);
 		logger.info('Additional tokens completed');
 	} catch (e) {
@@ -162,13 +164,14 @@ export async function extractTokenList(
 	type: number,
 	blockNumber: number,
 	tokenData: {},
-	owner: string
+	owner: string,
+	eventType: string
 ) {
 	const tokens = [];
 	for (let i = startIndex; i < endIndex; i++) {
 		const serialNumber = i;
 		const tokenId = `[${collectionId},${seriesId},${serialNumber}]`;
-		tokens.push([tokenId, type, blockNumber, JSON.stringify(tokenData), owner]);
+		tokens.push([tokenId, type, blockNumber, JSON.stringify(tokenData), owner, eventType]);
 	}
 	await trackEventDataSet(tokens);
 }

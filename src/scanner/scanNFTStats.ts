@@ -26,7 +26,10 @@ import { config } from "dotenv";
 import logger from "../logger";
 import { Vec } from "@polkadot/types-codec";
 import { u8aToString } from "@polkadot/util";
-
+import mongoose from 'mongoose';
+import axios from "axios";
+import * as fs from "fs";
+//const { EventTracker } = require('../mongo/models');
 config();
 export let supportedAssets = [];
 
@@ -310,20 +313,45 @@ async function main(networkName) {
 
 	const api = await Api.create({ provider: process.env.provider });
 	const currentRuntimeVersion = await api.rpc.state.getRuntimeVersion();
+	// const connectionStr = `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/admin`;
+	await mongoose.connect(process.env.MONGO_URI);
 	await fetchSupportedAssets(api);
 	const redisClient = createClient();
 	await redisClient.connect();
-	// await redisClient.set('processedBlock', '11408530');
-	logger.info(`Connect to cennznet network ${networkName}`);
+	let startDate = new Date("02/02/2022");
+	let endDate = new Date("05/01/2022");
+	//const startDate =
+	// let start = new Date(startDate);
+	// let end = new Date(endDate);
+	//while (start <= end) {
+	let page = 0;
+	let blockNumbers = [];
+	let globalBlockNumbers = [];
+	do {
+		const dateTimeInParts = startDate.toISOString().split("T");
+		const startDateStr = dateTimeInParts[0];
+		console.log(startDateStr);
+		const endDateStr = endDate.toISOString().split("T")?.[0];
+		const url = `https://service.eks.centrality.cloud/cennznet-explorer-api/api/scan/blocks_by_section?section=nft&method=AuctionSold&startDate=${startDateStr}&endDate=${endDateStr}&page=${page}&row=100`;
+		console.log('url:',url);
+		const response = await axios.get(url);
+		blockNumbers = response?.data?.data;
+		page = page+1;
+		console.log('blockNumber:', blockNumbers);
+		console.log('blockNumber:', blockNumbers.length);
+		console.log('blockNumber:', blockNumbers.length > 0);
+		globalBlockNumbers = globalBlockNumbers.concat(blockNumbers);
+	} while(blockNumbers.length > 0 );
+	console.log('Global block number:',globalBlockNumbers);
+
+	const chunkSize = 10;
+	for (let i = 0; i < globalBlockNumbers.length; i += chunkSize) {
+		const chunk = globalBlockNumbers.slice(i, i + chunkSize);
+
 	let apiAt;
-	while (true) {
-		const [processedBlock, finalizedBlock] = await getBlockInfoFromRedis(
-			redisClient
-		);
-		logger.info(`processedBlock::${processedBlock}`);
-		logger.info(`finalizedBlock:${finalizedBlock}`);
-		for (let i = processedBlock + 1; i <= finalizedBlock; i++) {
-			const blockNumber = i;
+	await Promise.all(
+		chunk.map(async (blockNumber) => {
+			//const blockNumber = i;
 			logger.info(`HEALTH CHECK => OK`);
 			logger.info(`At blocknumber: ${blockNumber}`);
 			const blockHash = await api.rpc.chain.getBlockHash(blockNumber);
@@ -331,16 +359,19 @@ async function main(networkName) {
 			const block = await api.rpc.chain.getBlock(blockHash);
 			const allEvents = await api.query.system.events.at(blockHash);
 			const extrinsics = block.block.extrinsics;
-			const runtimeVersionAtBlockHash = await api.rpc.state.getRuntimeVersion(blockHash);
-
-			if (runtimeVersionAtBlockHash.specVersion.toNumber() < currentRuntimeVersion.specVersion.toNumber()) {
-				apiAt = await api.at(blockHash);
-			}
+			apiAt = await api.at(blockHash);
 
 			await Promise.all(
 				extrinsics.map(async (e, index) => {
 					const params = getExtrinsicParams(e);
-					let call= apiAt ? apiAt.findCall(e.callIndex): api.findCall(e.callIndex);
+					let call;
+					try {
+						call = apiAt.findCall(e.callIndex);
+					} catch (error) {
+						console.log('call:',call);
+						console.log('error at block number:',blockNumber);
+						console.log('extrinsic:', e.toHuman());
+					}
 
 					if (call.section === "nft") {
 						const extrinsicRelatedEvents = filterExtrinsicEvents(
@@ -381,7 +412,7 @@ async function main(networkName) {
 				);
 			}
 			await redisClient.set("processedBlock", blockNumber.toString());
-		}
+		}));
 		await sleep(5000);
 	}
 }

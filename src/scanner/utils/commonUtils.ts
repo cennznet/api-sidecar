@@ -13,7 +13,8 @@ export async function extractTokenListingData(
 	dataInserts,
 	blockNumber,
 	tokenData,
-	owner
+	owner,
+	eventType
 ) {
 	tokens.forEach((token) => {
 		dataInserts.push([
@@ -22,6 +23,7 @@ export async function extractTokenListingData(
 			blockNumber,
 			JSON.stringify(tokenData),
 			owner,
+			eventType
 		]);
 	});
 	await trackEventDataSet(dataInserts);
@@ -47,7 +49,8 @@ export async function extractListingData(
 	tokenData,
 	owner,
 	listingId,
-	listingData
+	listingData,
+	eventType
 ) {
 	const tokens = [];
 	let type = 0;
@@ -58,6 +61,7 @@ export async function extractListingData(
 			blockNumber,
 			JSON.stringify(tokenData),
 			owner,
+			eventType
 		]);
 	});
 	type = 1; // listing data
@@ -67,6 +71,7 @@ export async function extractListingData(
 		blockNumber,
 		JSON.stringify(listingData),
 		owner,
+		eventType
 	]);
 	await trackEventDataSet(tokens);
 }

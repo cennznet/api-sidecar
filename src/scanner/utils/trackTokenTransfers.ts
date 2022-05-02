@@ -14,17 +14,16 @@ export async function trackTransferData(
 		const tokenId = JSON.stringify(params[0].value);
 		const newOwner = params[1].value;
 		const tokenData = {
-			eventData: {
 				date: date,
 				owner: newOwner,
 				txHash: txHash,
-			},
-			eventType: "NFT_TRANSFERED",
 		};
+		const eventType = "NFT_TRANSFERED";
 		const type = 0;
 		await trackEventData(
 			tokenId,
 			type,
+			eventType,
 			blockNumber,
 			JSON.stringify(tokenData),
 			owner
@@ -65,13 +64,11 @@ export async function trackTransferBatchData(
 			tokenIds = params[0].value; // tokenIds = tokens[]
 			newOwner = params[1].value;
 		}
+		const eventType = "NFT_TRANSFERED";
 		const tokenData = {
-			eventData: {
 				date: date,
 				owner: newOwner,
 				txHash: txHash,
-			},
-			eventType: "NFT_TRANSFERED",
 		};
 		const tokens = [];
 		let type = 0; // nft token data
@@ -82,6 +79,7 @@ export async function trackTransferBatchData(
 				blockNumber,
 				JSON.stringify(tokenData),
 				owner,
+				eventType
 			]);
 		});
 		await trackEventDataSet(tokens);

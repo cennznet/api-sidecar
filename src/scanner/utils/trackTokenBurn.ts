@@ -13,17 +13,16 @@ export async function trackBurnData(
 	try {
 		const tokenId = JSON.stringify(params[0].value);
 		const tokenData = {
-			eventData: {
 				date: date,
 				owner: null,
 				txHash: txHash,
-			},
-			eventType: "NFT_BURNED",
 		};
+		const eventType = "NFT_BURNED";
 		const type = 0;
 		await trackEventData(
 			tokenId,
 			type,
+			eventType,
 			blockNumber,
 			JSON.stringify(tokenData),
 			owner
@@ -51,17 +50,15 @@ export async function trackBurnBatchData(
 		const seriesId = params[1].value;
 		const serialNumbers = params[2].value;
 		const tokenData = {
-			eventData: {
 				date: date,
 				owner: null,
 				txHash: txHash,
-			},
-			eventType: "NFT_BURNED",
 		};
+		const eventType = "NFT_BURNED";
 		const tokens = [];
 		serialNumbers.forEach((serialNumber) => {
 			const tokenId = `[${collectionId.toString()},${seriesId},${serialNumber}]`;
-			tokens.push([tokenId, 0, blockNumber, JSON.stringify(tokenData), owner]);
+			tokens.push([tokenId, 0, blockNumber, JSON.stringify(tokenData), owner, eventType]);
 		});
 		await trackEventDataSet(tokens);
 

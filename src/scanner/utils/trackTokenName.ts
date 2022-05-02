@@ -21,14 +21,12 @@ export async function trackSeriesNameData(
 			.createType(params[2].type, params[2].value)
 			.toHuman();
 		const tokenData = {
-			eventData: {
 				name: name,
 				date: date,
 				owner: owner,
 				txHash: txHash,
-			},
-			eventType: "SERIES_NAMED",
 		};
+		const eventType = "SERIES_NAMED";
 		const type = 0; // nft token data
 		const nextSerialNumber = (
 			(await api.query.nft.nextSerialNumber.at(
@@ -45,7 +43,8 @@ export async function trackSeriesNameData(
 			type,
 			blockNumber,
 			tokenData,
-			owner
+			owner,
+			eventType
 		);
 		logger.info('Series name updated');
 	} catch (e) {

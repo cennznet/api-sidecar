@@ -16,23 +16,23 @@ export async function trackBuyData(
 ) {
 	try {
 		const listingId = params[0].value;
-		logger.info(`listingId::${listingId}`);
-		logger.info(`blockHash:${blockHash.toString()}`);
-		const blockHashBeforeBuy = (
-			await api.rpc.chain.getBlockHash(blockNumber - 1)
-		).toString();
-		const listingDetail = (
-			(await api.query.nft.listings.at(
+		// logger.info(`listingId::${listingId}`);
+		// logger.info(`blockHash:${blockHash.toString()}`);
+		// logger.info(`blockNumber:${blockNumber}`);
+		const previousBlock = blockNumber - 1;
+		const blockHashBeforeBuy =
+			await api.rpc.chain.getBlockHash(previousBlock);
+		console.log('blockHashBeforeBuy::',blockHashBeforeBuy.toString());
+		const listingDetailInfo = await api.query.nft.listings.at(
 				blockHashBeforeBuy,
-				listingId
-			)) as Option<Listing>
-		).unwrapOrDefault();
+				listingId) as Option<Listing>;
+		const listingDetail = listingDetailInfo.unwrapOrDefault();
 		const details = listingDetail.asFixedPrice.toJSON();
-		logger.info(`details::${details}`);
+		// logger.info(`details::${details}`);
 		const fixedPrice = accuracyFormat(details.fixedPrice, details.paymentAsset);
 		const dataInserts = [];
+		const eventType = "LISTING_CLOSED";
 		const listingData = {
-			eventData: {
 				type: "Fixed",
 				assetId: details.paymentAsset,
 				price: fixedPrice,
@@ -41,8 +41,6 @@ export async function trackBuyData(
 				seller: details.seller.toString(),
 				buyer: details.buyer ? details.buyer.toString() : owner,
 				tokenIds: JSON.stringify(details.tokens),
-			},
-			eventType: "LISTING_CLOSED",
 		};
 		dataInserts.push([
 			listingId,
@@ -50,9 +48,9 @@ export async function trackBuyData(
 			blockNumber,
 			JSON.stringify(listingData),
 			owner,
+			eventType
 		]);
 		const tokenData = {
-			eventData: {
 				type: "Fixed",
 				txHash: txHash,
 				listingId: listingId,
@@ -60,15 +58,14 @@ export async function trackBuyData(
 				assetId: details.paymentAsset,
 				date: date,
 				owner: owner,
-			},
-			eventType: "LISTING_CLOSED",
 		};
 		await extractTokenListingData(
 			details.tokens,
 			dataInserts,
 			blockNumber,
 			tokenData,
-			owner
+			owner,
+			eventType
 		);
 		logger.info("Buy done");
 	} catch (e) {

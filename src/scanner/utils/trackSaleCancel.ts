@@ -36,9 +36,8 @@ export async function trackCancelSaleData(
 		}
 		const price = accuracyFormat(priceRaw, details.paymentAsset);
 		const dataInserts = [];
-
+		const eventType = "LISTING_CANCELED";
 		const listingData = {
-			eventData: {
 				type: type,
 				assetId: details.paymentAsset,
 				price: price.toString(),
@@ -46,8 +45,6 @@ export async function trackCancelSaleData(
 				date: date,
 				seller: details.seller.toString(),
 				tokenIds: JSON.stringify(details.tokens),
-			},
-			eventType: "LISTING_CANCELED",
 		};
 		dataInserts.push([
 			listingId,
@@ -55,24 +52,23 @@ export async function trackCancelSaleData(
 			blockNumber,
 			JSON.stringify(listingData),
 			owner,
+			eventType
 		]);
 		const tokenData = {
-			eventData: {
 				txHash: txHash,
 				listingId: listingId,
 				amount: price.toString(),
 				assetId: details.paymentAsset,
 				date: date,
 				seller: details.seller.toString(),
-			},
-			eventType: "LISTING_CANCELED",
 		};
 		await extractTokenListingData(
 			details.tokens,
 			dataInserts,
 			blockNumber,
 			tokenData,
-			owner
+			owner,
+			eventType
 		);
 		logger.info("cancelSale done");
 	} catch (e) {

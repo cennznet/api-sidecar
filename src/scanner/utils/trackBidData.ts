@@ -27,8 +27,8 @@ export async function trackBidData(
 		const details = listingDetail.asAuction.toJSON();
 		const amount = accuracyFormat(amountRaw, details.paymentAsset);
 		const dataInserts = [];
+		const eventType = "NFT_BID";
 		const listingData = {
-			eventData: {
 				type: "Auction",
 				assetId: details.paymentAsset,
 				currentBid: amount,
@@ -37,27 +37,23 @@ export async function trackBidData(
 				date: date,
 				seller: details.seller.toString(),
 				tokenIds: JSON.stringify(details.tokens),
-			},
-			eventType: "NFT_BID",
 		};
-		dataInserts.push([listingId, 1, blockNumber, JSON.stringify(listingData)]);
+		dataInserts.push([listingId, 1, blockNumber, JSON.stringify(listingData), eventType]);
 		const tokenData = {
-			eventData: {
 				txHash: txHash,
 				listingId: listingId,
 				amount: amount,
 				assetId: details.paymentAsset,
 				date: date,
 				currentBidSetter: owner,
-			},
-			eventType: "NFT_BID",
 		};
 		await extractTokenListingData(
 			details.tokens,
 			dataInserts,
 			blockNumber,
 			tokenData,
-			owner
+			owner,
+			eventType
 		);
 		logger.info("Bid done");
 	} catch (e) {

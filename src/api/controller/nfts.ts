@@ -18,6 +18,7 @@ interface WalletQueryObject {
 interface EventTracker {
 	streamId: string;
 	data: string;
+	eventType: string
 }
 
 type Request = FastifyRequest<{
@@ -28,90 +29,99 @@ export async function getTokenDetails(
 	request: Request,
 	reply: FastifyReply
 ): Promise<FastifyReply> {
-	const { collectionId, seriesId, serialNumber } =
-		request.params as TokenQueryObject;
-	const tokenId = `[${collectionId},${seriesId},${serialNumber}]`;
-	const nftData: EventTracker[] = (await fetchEventStream(
-		tokenId
-	)) as unknown as EventTracker[];
-	if (!nftData || nftData.length === 0)
-		return reply.status(500).send({ error: "Token Not found!" });
-	let imgUrl = "",
-		hash = "",
-		createdDate = "";
-	// for a token Id NFT created will be one time
-	const createdDetails = nftData.find(
-		(nft) => JSON.parse(nft.data).eventType === "NFT_CREATED"
-	);
-	if (createdDetails) {
-		const createdEventsData = JSON.parse(createdDetails.data).eventData;
-		createdDate = createdEventsData.date;
-		imgUrl = createdEventsData.imgUrl;
-	}
-	let listingId = "N/A",
-		amount = "N/A",
-		tokenType = "N/A",
-		type = "N/A";
-	// Listing can happen multiple times
-	// find the recent/last listing id for a token
-	const reverseListing = [...nftData].reverse();
-	const listingStartedDetails = reverseListing.find(
-		(nft) => JSON.parse(nft.data).eventType === "LISTING_STARTED"
-	);
-	const listingClosedDetails = reverseListing.find(
-		(nft) => JSON.parse(nft.data).eventType === "LISTING_CLOSED"
-	);
-	const startListingEventData = listingStartedDetails
-		? JSON.parse(listingStartedDetails.data).eventData
-		: null;
-	const closeListingEventData = listingClosedDetails
-		? JSON.parse(listingClosedDetails.data).eventData
-		: null;
-	// check if listing started and not closed or the last closed listing is not same as last opened listing, then show listing data
-	if (
-		startListingEventData &&
-		(!listingClosedDetails ||
-			startListingEventData.listingId !== closeListingEventData.listingId)
-	) {
-		listingId = startListingEventData.listingId;
-		amount = startListingEventData.amount;
-		tokenType = startListingEventData.assetId;
-		type = startListingEventData.type;
-	}
-	const lastEvent = nftData.slice(-1)[0];
-	const lastEventData = JSON.parse(lastEvent.data);
-	const transactionType = lastEventData.eventType;
-	hash = lastEventData.txHash;
-	const items = nftData.map((nft) => {
-		const eventDetails = JSON.parse(nft.data);
-		return {
-			status: eventDetails.eventType,
-			hash: eventDetails.eventData.txHash,
-			date: eventDetails.eventData.date,
-			owner: eventDetails.eventData.owner,
+	try {
+		const eventTracker = this.mongo.db.collection('EventTracker');
+
+		const {collectionId, seriesId, serialNumber} =
+			request.params as TokenQueryObject;
+		const tokenId = `[${collectionId},${seriesId},${serialNumber}]`;
+		let nftData = await eventTracker.find({ streamId: tokenId }).sort({version: "asc"});
+		nftData = await nftData.toArray();
+		if (!nftData || nftData.length === 0)
+			return reply.status(500).send({error: "Token Not found!"});
+		let imgUrl = "",
+			hash = "",
+			createdDate = "";
+		// for a token Id NFT created will be one time
+		const createdDetails = nftData.find(
+			(nft) => nft.eventType === "NFT_CREATED"
+		);
+		if (createdDetails) {
+			const createdEventsData = JSON.parse(createdDetails.data);
+			createdDate = createdEventsData.date;
+			imgUrl = createdEventsData.imgUrl;
+		}
+		let listingId = "N/A",
+			amount = "N/A",
+			tokenType = "N/A",
+			type = "N/A";
+		// Listing can happen multiple times
+		// find the recent/last listing id for a token
+		const reverseListing = [...nftData].reverse();
+		const listingStartedDetails = reverseListing.find(
+			(nft) => nft.eventType === "LISTING_STARTED"
+		);
+		const listingClosedDetails = reverseListing.find(
+			(nft) => nft.eventType === "LISTING_CLOSED"
+		);
+		const startListingEventData = listingStartedDetails
+			? JSON.parse(listingStartedDetails.data)
+			: null;
+		const closeListingEventData = listingClosedDetails
+			? JSON.parse(listingClosedDetails.data)
+			: null;
+		// check if listing started and not closed or the last closed listing is not same as last opened listing, then show listing data
+		if (
+			startListingEventData &&
+			(!listingClosedDetails ||
+				startListingEventData.listingId !== closeListingEventData.listingId)
+		) {
+			listingId = startListingEventData.listingId;
+			amount = startListingEventData.amount;
+			tokenType = startListingEventData.assetId;
+			type = startListingEventData.type;
+		}
+		const lastEvent = nftData.slice(-1)[0];
+		const lastEventData = JSON.parse(lastEvent.data);
+		const transactionType = lastEventData.eventType;
+		hash = lastEventData.txHash;
+		const items = nftData.map((nft) => {
+			const eventDetails = JSON.parse(nft.data);
+			return {
+				status: nft.eventType,
+				hash: eventDetails.txHash,
+				date: eventDetails.date,
+				owner: eventDetails.owner,
+			};
+		});
+		const response = {
+			createdDate: createdDate,
+			imgUrl: imgUrl,
+			listingId: listingId,
+			amount: amount,
+			tokenType: tokenType,
+			listingType: type,
+			transactionType: transactionType,
+			hash: hash,
+			items: items,
 		};
-	});
-	const response = {
-		createdDate: createdDate,
-		imgUrl: imgUrl,
-		listingId: listingId,
-		amount: amount,
-		tokenType: tokenType,
-		listingType: type,
-		transactionType: transactionType,
-		hash: hash,
-		items: items,
-	};
-	return reply.status(200).send(response);
+		return reply.status(200).send(response);
+	} catch (e) {
+		console.log('err:',e);
+		return reply.status(404).send();
+	}
 }
 
 export async function getListingDetails(
 	request: Request,
 	reply: FastifyReply
 ): Promise<FastifyReply> {
-	const data = await fetchEventStream(
-		(request.params as ListingQueryObject).listingId
-	);
+	const eventTracker = this.mongo.db.collection('EventTracker');
+	// const data = await fetchEventStream(
+	// 	(request.params as ListingQueryObject).listingId
+	// );
+	let data = await eventTracker.find({ streamId: (request.params as ListingQueryObject).listingId }).sort({version: "asc"});
+	data = await data.toArray();
 	if (!data || data.length === 0)
 		return reply.status(500).send({ error: "Token Not found!" });
 	const listingData = data as EventTracker[];
@@ -125,42 +135,42 @@ export async function getListingDetails(
 		sellPrice,
 		buyPrice;
 	const listingStarted = listingData.find(
-		(nft) => JSON.parse(nft.data).eventType === "LISTING_STARTED"
+		(nft) => nft.eventType === "LISTING_STARTED"
 	);
 	if (listingStarted) {
 		const eventDetails = JSON.parse(listingStarted.data);
-		date = eventDetails.eventData.date;
-		type = eventDetails.eventData.type;
-		closeDate = eventDetails.eventData.close;
-		seller = eventDetails.eventData.seller;
-		tokenIds = eventDetails.eventData.tokenIds;
-		status = eventDetails.eventType;
-		assetId = eventDetails.eventData.assetId;
-		sellPrice = eventDetails.eventData.sellPrice;
+		date = eventDetails.date;
+		type = eventDetails.type;
+		closeDate = eventDetails.close;
+		seller = eventDetails.seller;
+		tokenIds = eventDetails.tokenIds;
+		status = listingStarted.eventType;
+		assetId = eventDetails.assetId;
+		sellPrice = eventDetails.sellPrice;
 	}
 	const listingClosed = listingData.find(
 		(nft) =>
-			JSON.parse(nft.data).eventType === "LISTING_CANCELED" ||
-			JSON.parse(nft.data).eventType === "LISTING_CLOSED"
+			nft.eventType === "LISTING_CANCELED" ||
+			nft.eventType === "LISTING_CLOSED"
 	);
 	if (listingClosed) {
 		const eventDetails = JSON.parse(listingClosed.data);
-		type = eventDetails.eventData.type;
-		status = eventDetails.eventType;
-		tokenIds = eventDetails.eventData.tokenIds;
-		if (eventDetails.eventType === "LISTING_CLOSED") {
-			buyPrice = eventDetails.eventData.price;
+		type = eventDetails.type;
+		status = listingClosed.eventType;
+		tokenIds = eventDetails.tokenIds;
+		if (status === "LISTING_CLOSED") {
+			buyPrice = eventDetails.price;
 		}
 	}
 	// get all bid
 	const bid = listingData
-		.filter((list) => JSON.parse(list.data).eventType === "NFT_BID")
+		.filter((list) => list.eventType === "NFT_BID")
 		.map((listing) => {
 			const eventDetails = JSON.parse(listing.data);
-			const address = eventDetails.eventData.currentBidSetter;
-			const amount = eventDetails.eventData.currentBid;
-			const date = eventDetails.eventData.date;
-			const hash = eventDetails.eventData.txHash;
+			const address = eventDetails.currentBidSetter;
+			const amount = eventDetails.currentBid;
+			const date = eventDetails.date;
+			const hash = eventDetails.txHash;
 			return { address, amount, date, hash };
 		});
 	const response = {
@@ -182,17 +192,17 @@ export async function getWalletDetails(
 	request: Request,
 	reply: FastifyReply
 ): Promise<FastifyReply> {
-	const data = await fetchUsersNFTEvent(
-		(request.params as WalletQueryObject).address
-	);
+	const EventTracker = this.mongo.db.collection('EventTracker');
+	let data = await EventTracker.find({ signer: (request.params as WalletQueryObject).address, streamType: 0 }).sort({version: "asc"})
+	data = await data.toArray();
 	if (!data || data.length === 0)
 		return reply.status(500).send({ error: "Token Not found!" });
 	const walletData = data as EventTracker[];
 	let nft = walletData.map((walletInfo) => {
 		const walletDetails = JSON.parse(walletInfo.data);
 		const tokenId = walletInfo.streamId;
-		const status = walletDetails.eventType;
-		const data = walletDetails.eventData;
+		const status = walletInfo.eventType;
+		const data = walletDetails;
 		return { tokenId, status, data };
 	});
 	const response = {

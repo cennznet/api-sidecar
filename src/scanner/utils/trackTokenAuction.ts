@@ -32,8 +32,8 @@ export async function trackAuctionData(
 			: "";
 		const reservedPrice = accuracyFormat(reservedPriceRaw, paymentAsset);
 		const duration = params[3].value;
+		const eventType = "LISTING_STARTED";
 		const listingData = {
-			eventData: {
 				type: "Auction",
 				assetId: paymentAsset,
 				sellPrice: reservedPrice,
@@ -42,11 +42,8 @@ export async function trackAuctionData(
 				seller: owner,
 				tokenIds: JSON.stringify([tokenId]),
 				close: new Date(duration + blockNumber),
-			},
-			eventType: "LISTING_STARTED",
 		};
 		const tokenData = {
-			eventData: {
 				type: "Auction",
 				txHash: txHash,
 				listingId: listingId,
@@ -54,8 +51,6 @@ export async function trackAuctionData(
 				assetId: paymentAsset,
 				date: date,
 				owner: owner,
-			},
-			eventType: "LISTING_STARTED",
 		};
 		await extractAuctionData(
 			listingId,
@@ -63,7 +58,8 @@ export async function trackAuctionData(
 			listingData,
 			tokenId,
 			tokenData,
-			owner
+			owner,
+			eventType
 		);
 		logger.info("Auction done");
 	} catch (e) {
@@ -103,8 +99,8 @@ export async function trackAuctionBundleData(
 			duration + blockNumber,
 			date
 		);
+		const eventType = "LISTING_STARTED";
 		const listingData = {
-			eventData: {
 				type: "Auction",
 				assetId: paymentAsset,
 				sellPrice: reservedPrice,
@@ -113,11 +109,8 @@ export async function trackAuctionBundleData(
 				seller: owner,
 				tokenIds: JSON.stringify(tokenIds),
 				close: closeDate,
-			},
-			eventType: "LISTING_STARTED",
 		};
 		const tokenData = {
-			eventData: {
 				type: "Auction",
 				txHash: txHash,
 				listingId: listingId,
@@ -125,8 +118,6 @@ export async function trackAuctionBundleData(
 				assetId: paymentAsset,
 				date: date,
 				owner: owner,
-			},
-			eventType: "LISTING_STARTED",
 		};
 		const dataInserts = [];
 		dataInserts.push([
@@ -135,13 +126,15 @@ export async function trackAuctionBundleData(
 			blockNumber,
 			JSON.stringify(listingData),
 			owner,
+			eventType
 		]);
 		await extractTokenListingData(
 			tokenIds,
 			dataInserts,
 			blockNumber,
 			tokenData,
-			owner
+			owner,
+			eventType
 		);
 		logger.info("Bundle Auction done");
 	} catch (e) {
@@ -159,17 +152,19 @@ async function extractAuctionData(
 	listingData: {},
 	tokenId: string,
 	tokenData: {},
-	owner: string
+	owner: string,
+	eventType: string
 ) {
 	const dataInserts = [];
 	// 1 is for listing type
-	dataInserts.push([listingId, 1, blockNumber, JSON.stringify(listingData)]);
+	dataInserts.push([listingId, 1, blockNumber, JSON.stringify(listingData), owner, eventType]);
 	dataInserts.push([
 		JSON.stringify(tokenId),
 		0,
 		blockNumber,
 		JSON.stringify(tokenData),
 		owner,
+		eventType
 	]);
 	await trackEventDataSet(dataInserts);
 }
@@ -200,8 +195,8 @@ export async function processAuctionSoldEvent(
 		const closeDate = await convertBlockToDate(api, details.close, date);
 		const price = accuracyFormat(priceRaw, details.paymentAsset);
 
+		const eventType = "LISTING_CLOSED";
 		const listingData = {
-			eventData: {
 				type: "Auction",
 				assetId: assetId,
 				price: price.toString(),
@@ -210,9 +205,7 @@ export async function processAuctionSoldEvent(
 				seller: details.seller.toString(),
 				buyer: winner,
 				tokenIds: JSON.stringify(details.tokens),
-				close: closeDate,
-			},
-			eventType: "LISTING_CLOSED",
+				close: closeDate
 		};
 		dataInserts.push([
 			listingId,
@@ -220,24 +213,23 @@ export async function processAuctionSoldEvent(
 			blockNumber,
 			JSON.stringify(listingData),
 			null,
+			eventType
 		]);
 		const tokenData = {
-			eventData: {
 				txHash: blockHash,
 				listingId: listingId,
 				amount: price.toString(),
 				assetId: assetId,
 				date: date,
 				seller: details.seller.toString(),
-			},
-			eventType: "LISTING_CLOSED",
 		};
 		await extractTokenListingData(
 			details.tokens,
 			dataInserts,
 			blockNumber,
 			tokenData,
-			null
+			null,
+			eventType
 		);
 		logger.info("Auction completed");
 	} catch (e) {

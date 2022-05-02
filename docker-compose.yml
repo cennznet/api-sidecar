@@ -1,25 +1,24 @@
-#version: '3'
-#services:
-#  mongo:
-#    image: mongo:5
-#    restart: always
-#    environment:
-#    - MONGO_INITDB_ROOT_USERNAME=admin
-#    - MONGO_INITDB_ROOT_PASSWORD=password
-#    ports:
-#      - "27017:27017"
-
-version: '2.4'
+version: '3'
 services:
-  mysql:
-    image: mysql:5.7
-    ports:
-      - 3306:3306
-    volumes:
-      - .data/mysql:/var/lib/mysql
+#  cennznet:
+#    image: cennznet/cennznet:2.0.0-rc5
+#    volumes:
+#    - ./data/cennznet:/mnt/data
+#    command:
+#      - --dev
+#      - --base-path=/mnt/data
+#      - --name=cennznet-${HOSTNAME}
+#      - --unsafe-ws-external
+#      - --unsafe-rpc-external
+#      - --rpc-cors=all
+#    ports:
+#      - "9933:9933"
+#      - "9944:9944"
+  mongo:
+    image: mongo:5
+    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: mysql
-  redis:
-    image: redis:6.2.5-alpine
+    - MONGO_INITDB_ROOT_USERNAME=admin
+    - MONGO_INITDB_ROOT_PASSWORD=password
     ports:
-      - 16379:6379
+      - "27017:27017"

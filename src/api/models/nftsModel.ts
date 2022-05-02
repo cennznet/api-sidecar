@@ -1,17 +1,13 @@
-import { PrismaClient } from "@prisma/client";
 import logger from "../../logger";
+const { EventTracker } = require('../../mongo/models');
 
-const prisma = new PrismaClient();
 export async function fetchEventStream(tokenId) {
 	try {
-		const eventStream = await prisma.eventTracker.findMany({
-			where: {
-				streamId: tokenId,
-			},
-			orderBy: {
-				version: "asc",
-			},
-		});
+		console.log('*****');
+		console.log('Reached fetchEventStream..');
+
+		const eventStream = await EventTracker.find({ streamId: tokenId }).sort({version: "asc"}).exec();
+		console.log('eventStream:',eventStream);
 		return eventStream;
 	} catch (err) {
 		logger.error(err);
@@ -19,17 +15,10 @@ export async function fetchEventStream(tokenId) {
 	}
 }
 
-export async function fetchUsersNFTEvent(address) {
+export async function fetchUsersNFTEvent(address, EventTracker) {
 	try {
-		const eventStream = await prisma.eventTracker.findMany({
-			where: {
-				signer: address,
-				type: 0,
-			},
-			orderBy: {
-				version: "asc",
-			},
-		});
+		const eventStream = await EventTracker.find({ signer: address, streamType: 0 }).sort({version: "asc"}).exec();
+		console.log('eventStream::',eventStream);
 		return eventStream;
 	} catch (err) {
 		logger.error(err);

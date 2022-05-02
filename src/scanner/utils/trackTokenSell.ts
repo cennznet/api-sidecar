@@ -25,7 +25,6 @@ export async function trackSellBundleData(
 		const marketPlaceId = params[5] ? params[5].value : null;
 		const listingId = eventData[1];
 		const tokenData = {
-			eventData: {
 				type: "Fixed",
 				txHash: txHash,
 				listingId: listingId,
@@ -33,9 +32,8 @@ export async function trackSellBundleData(
 				assetId: paymentAsset,
 				date: date,
 				owner: owner,
-			},
-			eventType: "LISTING_STARTED",
 		};
+		const eventType = "LISTING_STARTED";
 
 		const closeDate = await convertBlockToDate(
 			api,
@@ -43,7 +41,6 @@ export async function trackSellBundleData(
 			date
 		);
 		const listingData = {
-			eventData: {
 				type: "Fixed",
 				assetId: paymentAsset,
 				sellPrice: fixedPrice,
@@ -54,8 +51,6 @@ export async function trackSellBundleData(
 				tokenIds: JSON.stringify(tokenIds),
 				close: closeDate,
 				marketPlaceId: marketPlaceId,
-			},
-			eventType: "LISTING_STARTED",
 		};
 
 
@@ -65,7 +60,8 @@ export async function trackSellBundleData(
 			tokenData,
 			owner,
 			listingId,
-			listingData
+			listingData,
+			eventType
 		);
 		logger.info('Sell bundle data done');
 	} catch (e) {
@@ -99,7 +95,6 @@ export async function trackSellData(
 		const marketPlaceId = params[5] ? params[5].value : null;
 		const listingId = eventData[1];
 		const tokenData = {
-			eventData: {
 				type: "Fixed",
 				txHash: txHash,
 				listingId: listingId,
@@ -107,16 +102,14 @@ export async function trackSellData(
 				assetId: paymentAsset,
 				date: date,
 				owner: owner,
-			},
-			eventType: "LISTING_STARTED",
 		};
+		const eventType = "LISTING_STARTED";
 		const closeDate = await convertBlockToDate(
 			api,
 			duration + blockNumber,
 			date
 		);
 		const listingData = {
-			eventData: {
 				type: "Fixed",
 				assetId: paymentAsset,
 				sellPrice: fixedPrice,
@@ -127,8 +120,6 @@ export async function trackSellData(
 				tokenIds: JSON.stringify([tokenIds]),
 				close: closeDate,
 				marketPlaceId: marketPlaceId,
-			},
-			eventType: "LISTING_STARTED",
 		};
 		await extractListingData(
 			[tokenIds],
@@ -136,7 +127,8 @@ export async function trackSellData(
 			tokenData,
 			owner,
 			listingId,
-			listingData
+			listingData,
+			eventType
 		);
 		logger.info('Sell data done');
 	} catch (e) {
