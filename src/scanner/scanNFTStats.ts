@@ -312,18 +312,12 @@ async function main(networkName) {
 	networkName = networkName || "azalea";
 
 	const api = await Api.create({ provider: process.env.provider });
-	const currentRuntimeVersion = await api.rpc.state.getRuntimeVersion();
-	// const connectionStr = `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/admin`;
 	await mongoose.connect(process.env.MONGO_URI);
 	await fetchSupportedAssets(api);
 	const redisClient = createClient();
 	await redisClient.connect();
 	let startDate = new Date("02/02/2022");
 	let endDate = new Date("05/01/2022");
-	//const startDate =
-	// let start = new Date(startDate);
-	// let end = new Date(endDate);
-	//while (start <= end) {
 	let page = 0;
 	let blockNumbers = [];
 	let globalBlockNumbers = [];
