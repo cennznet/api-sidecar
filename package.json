@@ -13,7 +13,7 @@
     "scan:syncState": "node src/scanner/syncNftStateAtBlock.js"
   },
   "dependencies": {
-    "@cennznet/api": "^1.5.0-alpha.3",
+    "@cennznet/api": "2.1.1-alpha.2",
     "bignumber.js": "^9.0.0",
     "dotenv": "^8.2.0",
     "fastify": "^3.22.0",
