@@ -65,29 +65,3 @@ async function main () {
     }
 }
 main().catch((err) => console.log(err));
-
-
-/**
- * Find ethereum executed event and get the first param from data [From, To/Contract, TxHash]
- * **/
-function getEVMSigner(extrinsicIdx, allEvents) {
-    const events = filterExtrinsicEvents(extrinsicIdx, allEvents);
-    const event = events.find(
-        (evt) =>
-            evt.event.section === 'ethereum' && evt.event.method === 'Executed',
-    );
-    const evmAccount = event.event.data[0];
-    if (evmAccount) {
-        return cvmToAddress(evmAccount.toString());
-    }
-    return null;
-}
-function filterExtrinsicEvents(
-    extrinsicIdx,
-    events,
-){
-    return events.filter(
-        ({ phase }) =>
-            phase.isApplyExtrinsic && phase.asApplyExtrinsic.eqn(extrinsicIdx),
-    );
-}
