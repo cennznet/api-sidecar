@@ -18,48 +18,44 @@ async function main () {
     const api = await Api.create({network: networkName});
   //  logger.info(`Connect to cennznet network ${networkName}`);
     try {
-        const data = fs.readFileSync('src/8339-payouts.csv', 'utf8')
+        const data = fs.readFileSync('src/payouts.csv', 'utf8')
         const txs = [];
         const spendingAssetId = (await api.query.genericAsset.spendingAssetId()).toNumber();
+        console.log('spending asset id:', spendingAssetId);
         const csvData = data.split("\n");
         console.log('arr.length:',csvData.length);
-        const chunkSize = 1000
-        for (let i = 0; i < csvData.length; i += chunkSize) {
-            const chunk = csvData.slice(i, i + chunkSize);
-            console.log('chunk size::',chunk.length);
-            for (let records = 1; records < chunk; records++) {
-                const record = csvData[records]
-                const [receiver, amount] = record.split(',');
-                txs.push(api.tx.genericAsset.transfer(spendingAssetId, receiver, amount));
-            }
-            const sudoAddress = await api.query.sudo.key();
-            const keyring = new Keyring({type: 'sr25519'});
-            // Lookup from keyring ( on --dev sudo would be `//Alice`)
-            keyring.addFromUri('//Alice');
-            const sudoKeypair = keyring.getPair(sudoAddress.toString());
-            const nonce = await api.rpc.system.accountNextIndex(sudoAddress);
-            // console.log('TxLL:',txs);
-            // construct the batch and send the transactions
-            const ex = api.tx.utility.batch(txs);
-            const estimatedFee = await api.derive.fees.estimateFee({extrinsic: ex, userFeeAssetId: spendingAssetId});
-            console.log('estimatedFee:',estimatedFee.toString());
-            await ex.signAndSend(sudoKeypair, {nonce}, async ({events, status}) => {
-                if (status.isInBlock) {
-                    for (const {
-                        event: {method, section, data},
-                    } of events) {
-                        const blockHash = status.asInBlock
-                        console.log('Method:', method.toString());
-                        console.log('section:', section.toString());
-                        console.log('data:', data.toHuman());
-                        if (section === 'utility' && method == 'BatchCompleted') {
-                            console.log('Successful');
-                            // await verifyTxSuccess(blockHash, chunk);
+        // const sudoAddress = await api.query.sudo.key();
+        const keyring = new Keyring({type: 'sr25519'});
+        // Lookup from keyring ( on --dev sudo would be `//Alice`)
+        const airdropAccount = keyring.addFromUri('//Alice');
+        let nonce = await api.rpc.system.accountNextIndex(airdropAccount.address);
+
+        const newCSVDataHeader = "Account, 8329 Era, 8339 Era, 8357 Era, 8391 Era, 8396 Era, Total, TransactionHash";
+        fs.appendFile("src/payoutsWithTxHash.csv", newCSVDataHeader, (err)=> {console.error('error inserting data in csv');});
+        for (let records = 1; records < csvData.length; records++) {
+            const record = csvData[records]
+            const [receiver, era1, era2, era3, era4, era5, totalAmount] = record.split(',');
+
+            await new Promise((resolve) => {
+                const tx = api.tx.genericAsset.transfer(spendingAssetId, receiver, totalAmount);
+                tx.signAndSend(airdropAccount, {nonce: nonce++}, async ({events, status}) => {
+                    console.log('status:',status.toHuman());
+                    if (status.isInBlock) {
+                        for (const {event: {method, section, data}} of events) {
+                            if (section === 'genericAsset' && method == 'Transferred') {
+                                const [assetId, from, to, amountTransferred] = data;
+                                const newCSVDataAdded = `\r\n ${to}, ${era1}, ${era2}, ${era3}, ${era4}, ${era5}, ${amountTransferred}, ${tx.hash.toString()} `;
+                                console.log('newCSVDataAdded:',newCSVDataAdded);
+                                fs.appendFile("src/payoutsWithTxHash.csv", newCSVDataAdded,
+                                    (err)=> {console.error('error inserting data in csv');});
+                                resolve();
+                            }
                         }
                     }
-                }
+                });
             });
-        }
+            }
+            console.log('JOB completed!!');
     } catch (err) {
         console.error(err)
     }
