@@ -5,21 +5,19 @@ const { Keyring } = require('@polkadot/keyring');
 
 
 async function main () {
-    const networkName = 'local';
+    const networkName = 'azalea';
 
     const api = await Api.create({network: networkName});
-  //  logger.info(`Connect to cennznet network ${networkName}`);
+    console.log(`Connect to cennznet network ${networkName}`);
     try {
         const data = fs.readFileSync('src/payouts.csv', 'utf8')
-        const txs = [];
         const spendingAssetId = (await api.query.genericAsset.spendingAssetId()).toNumber();
         console.log('spending asset id:', spendingAssetId);
         const csvData = data.split("\n");
         console.log('arr.length:',csvData.length);
         // const sudoAddress = await api.query.sudo.key();
         const keyring = new Keyring({type: 'sr25519'});
-        // Lookup from keyring ( on --dev sudo would be `//Alice`)
-        const airdropAccount = keyring.addFromUri('//Alice');
+        const airdropAccount = keyring.addFromSeed(process.ENV.SEED);
         let nonce = await api.rpc.system.accountNextIndex(airdropAccount.address);
 
         const newCSVDataHeader = "Account, 8329 Era, 8339 Era, 8357 Era, 8391 Era, 8396 Era, Total, TransactionHash";
@@ -50,8 +48,8 @@ async function main () {
                     }
                 });
             });
-            }
-            console.log('JOB completed!!');
+        }
+        console.log('JOB completed!!');
     } catch (err) {
         console.error(err)
     }
