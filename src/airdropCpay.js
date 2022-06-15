@@ -2,15 +2,7 @@
 const { Api } = require('@cennznet/api');
 const fs = require('fs')
 const { Keyring } = require('@polkadot/keyring');
-// const {cvmToAddress} = require("@cennznet/types/utils");
 
-// async function verifyTxSuccess(blockHash, chunk) {
-//     for (let records = 1; records < chunk; records++) {
-//         const record = csvData[records]
-//         const [receiver, amount] = record.split(',');
-//         const
-//     }
-// }
 
 async function main () {
     const networkName = 'local';
@@ -31,7 +23,7 @@ async function main () {
         let nonce = await api.rpc.system.accountNextIndex(airdropAccount.address);
 
         const newCSVDataHeader = "Account, 8329 Era, 8339 Era, 8357 Era, 8391 Era, 8396 Era, Total, TransactionHash";
-        fs.appendFile("src/payoutsWithTxHash.csv", newCSVDataHeader, (err)=> {console.error('error inserting data in csv');});
+        fs.appendFile("src/payoutsWithTxHash.csv", newCSVDataHeader, (err)=> {if (err) { console.error('error inserting data in csv'); }});
         for (let records = 1; records < csvData.length; records++) {
             const record = csvData[records]
             const [receiver, era1, era2, era3, era4, era5, totalAmount] = record.split(',');
@@ -47,7 +39,11 @@ async function main () {
                                 const newCSVDataAdded = `\r\n ${to}, ${era1}, ${era2}, ${era3}, ${era4}, ${era5}, ${amountTransferred}, ${tx.hash.toString()} `;
                                 console.log('newCSVDataAdded:',newCSVDataAdded);
                                 fs.appendFile("src/payoutsWithTxHash.csv", newCSVDataAdded,
-                                    (err)=> {console.error('error inserting data in csv');});
+                                    (err)=> { if (err) { console.error('error inserting data in csv'); }});
+                                resolve();
+                            } else if (section === 'system' && method === 'ExtrinsicFailed') {
+                                fs.appendFile("src/failedPayoutsWithTxHash.csv", `${record}, ${tx.hash.toString()}`,
+                                    (err)=> { if (err) { console.error('error inserting data in csv'); }});
                                 resolve();
                             }
                         }
