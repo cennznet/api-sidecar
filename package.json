@@ -10,10 +10,12 @@
     "api": "node src/api/index.js",
     "seed": "node src/seedFake.js",
     "scan:start": "node src/scanner/scanNFTData.js",
-    "scan:syncState": "node src/scanner/syncNftStateAtBlock.js"
+    "scan:syncState": "node src/scanner/syncNftStateAtBlock.js",
+    "find:incorrectBlocks": "node src/IncorrectParentHash.js"
   },
   "dependencies": {
     "@cennznet/api": "^1.5.0-alpha.3",
+    "axios": "^0.27.2",
     "bignumber.js": "^9.0.0",
     "dotenv": "^8.2.0",
     "fastify": "^3.22.0",
